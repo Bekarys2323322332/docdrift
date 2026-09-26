@@ -1,0 +1,110 @@
+{
+  "tool": "DocDrift",
+  "schema_version": 1,
+  "repo": {
+    "name": "flask-realworld-example-app",
+    "source": "https://github.com/gothinkster/flask-realworld-example-app",
+    "licence": "MIT",
+    "target_folder": "audits/flask-realworld-example-app"
+  },
+  "audited_at": "2026-09-26",
+  "doc_files": [
+    "README.rst"
+  ],
+  "summary": {
+    "claims_checked": 16,
+    "ok": 16,
+    "drift": 0,
+    "unverified": 0,
+    "trust_score": 100,
+    "findings_by_severity": {
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0
+    }
+  },
+  "findings": [],
+  "undocumented_settings": [],
+  "unverified": [],
+  "ok": [
+    {
+      "id": "C1",
+      "category": "ENV",
+      "claim": "export CONDUIT_SECRET=...",
+      "doc": {
+        "file": "README.rst",
+        "line": 16
+      },
+      "evidence": {
+        "file": "conduit/settings.py",
+        "line": 10
+      }
+    },
+    {
+      "id": "C2",
+      "category": "ENV",
+      "claim": "export FLASK_APP=/path/to/autoapp.py",
+      "doc": {
+        "file": "README.rst",
+        "line": 21
+      },
+      "evidence": {
+        "file": "autoapp.py",
+        "line": null
+      }
+    },
+    {
+      "id": "C3",
+      "category": "ENV",
+      "claim": "export FLASK_DEBUG=1",
+      "doc": {
+        "file": "README.rst",
+        "line": 22
+      },
+      "evidence": {
+        "file": "autoapp.py",
+        "line": 8
+      }
+    },
+    {
+      "id": "C4",
+      "category": "PATH",
+      "claim": "pip install -r requirements/dev.txt",
+      "doc": {
+        "file": "README.rst",
+        "line": 28
+      },
+      "evidence": {
+        "file": "requirements/dev.txt",
+        "line": null
+      }
+    },
+    {
+      "id": "C5",
+      "category": "ENV",
+      "claim": "DATABASE_URL (PostgreSQL URI in production)",
+      "doc": {
+        "file": "README.rst",
+        "line": 48
+      },
+      "evidence": {
+        "file": "conduit/settings.py",
+        "line": 37
+      }
+    },
+    {
+      "id": "C6",
+      "category": "COMMAND",
+      "claim": "flask test",
+      "doc": {
+        "file": "README.rst",
+        "line": 67
+      },
+      "evidence": {
+        "file": "conduit/commands.py",
+        "line": 17
+      }
+    }
+  ],
+  "note": "Clean result on an unfamiliar open-source project: 16 of 16 claims correct, no false alarms. The summary is from Bob's audit; the short verified-claims list below comes from a manual spot-check of Bob's evidence."
+}

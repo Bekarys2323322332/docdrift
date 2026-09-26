@@ -453,6 +453,7 @@ function normalise(raw, fileName) {
   }));
   r.undocumented_settings = Array.isArray(raw.undocumented_settings) ? raw.undocumented_settings : [];
   r.unverified = Array.isArray(raw.unverified) ? raw.unverified : [];
+  r.outdated_practices = Array.isArray(raw.outdated_practices) ? raw.outdated_practices : [];
   r.ok = Array.isArray(raw.ok) ? raw.ok : [];
   r.doc_files = Array.isArray(raw.doc_files) ? raw.doc_files : [];
   return r;
@@ -536,6 +537,7 @@ function renderDetail() {
           <span>Docs <b>${esc(r.doc_files.join(", ") || "auto-detected")}</b></span>
           <span class="pill ${licenceOk ? "licence-ok" : "licence-warn"}" title="${licenceOk ? "Permissive licence" : "Check the licence before using this project"}">Licence: ${esc(licence)}</span>
         </div>
+        ${r.note ? `<p class="why" style="margin:0">${esc(r.note)}</p>` : ""}
         <div class="stats">
           <div class="stat"><div class="label">Claims</div><div class="n">${esc(s.claims_checked ?? 0)}</div></div>
           <div class="stat"><div class="label">OK</div><div class="n ok">${esc(s.ok ?? 0)}</div></div>
@@ -580,6 +582,17 @@ function renderDetail() {
         </table>
       </div>
     </div>` : ""}
+
+    ${r.outdated_practices.length ? `
+    <details class="panel">
+      <summary>Outdated practices, advice only (${r.outdated_practices.length})</summary>
+      <div class="table-wrap"><table>
+        <thead><tr><th>In docs</th><th>Observation (general knowledge, not counted in the score)</th></tr></thead>
+        <tbody>${r.outdated_practices.map(o => `
+          <tr><td><code>${esc(where(o.doc))}</code></td><td>${esc(o.observation)}</td></tr>`).join("")}
+        </tbody>
+      </table></div>
+    </details>` : ""}
 
     ${r.unverified.length ? `
     <details class="panel">
@@ -675,6 +688,8 @@ async function loadFiles(fileList) {
   let firstNew = null;
   for (const file of fileList) {
     if (!/\.json$/i.test(file.name)) { errors.push(`${file.name} was skipped: only .json reports can be loaded.`); continue; }
+    // reports/index.json is only the list of report names used by the online version; skip it quietly.
+    if (/^index\.json$/i.test(file.name)) continue;
     try {
       const report = normalise(JSON.parse(await file.text()), file.name);
       state.reports.push(report);
@@ -793,6 +808,33 @@ document.getElementById("theme-toggle").addEventListener("click", () => {
 // Samples go through the same checks as loaded files, so they render the same way.
 state.reports = SAMPLE_REPORTS.map(r => normalise(r, r.repo.name));
 render();
+
+/* When the page is served from a web address (for example GitHub Pages), load the real
+   reports listed in reports/index.json automatically. Real reports replace the samples.
+   Opened as a local file, browsers block this, so the page keeps the samples and the
+   Load reports button. */
+async function autoLoad() {
+  if (!/^https?:$/.test(location.protocol)) return;
+  try {
+    const res = await fetch("../reports/index.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const names = await res.json();
+    const loaded = [];
+    for (const name of names) {
+      try {
+        const r = await fetch("../reports/" + encodeURIComponent(name), { cache: "no-store" });
+        if (r.ok) loaded.push(normalise(await r.json(), name));
+      } catch (_) { /* skip a broken file, keep the rest */ }
+    }
+    if (loaded.length) {
+      state.reports = loaded;
+      state.active = 0;
+      resetView();
+      render();
+    }
+  } catch (_) { /* no index: keep the samples */ }
+}
+autoLoad();
 </script>
 </body>
 </html>

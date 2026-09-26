@@ -86,7 +86,9 @@ LOW (cosmetic or minor).
 <Step>
 **Write the reports** into the target folder:
 1. `DRIFT_REPORT.md`, using exactly the layout in `report-template.md`.
-2. `DRIFT_REPORT.json`, using exactly the structure in `report-schema.md`. It must be valid
+2. `DRIFT_REPORT.json`, using exactly the structure in `report-schema.md`.
+   For `audited_at`, use today's date from your environment details (YYYY-MM-DD). Never guess a
+   date; if you do not know it, write null. It must be valid
    JSON (double quotes, no comments, no trailing commas) and contain the same numbers and
    findings as the Markdown report.
 

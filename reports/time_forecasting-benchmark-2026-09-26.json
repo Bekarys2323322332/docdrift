@@ -1,0 +1,250 @@
+{
+  "tool": "DocDrift",
+  "schema_version": 1,
+  "repo": {
+    "name": "time_forecasting (planted-errors benchmark)",
+    "source": "local project with 10 planted errors",
+    "licence": "Own project",
+    "target_folder": "."
+  },
+  "audited_at": "2026-09-26",
+  "doc_files": [
+    "README.md"
+  ],
+  "summary": {
+    "claims_checked": 43,
+    "ok": 33,
+    "drift": 10,
+    "unverified": 0,
+    "trust_score": 77,
+    "findings_by_severity": {
+      "HIGH": 4,
+      "MEDIUM": 4,
+      "LOW": 2
+    }
+  },
+  "findings": [
+    {
+      "id": "D1",
+      "severity": "HIGH",
+      "category": "COMMAND",
+      "summary": "Start command points to a module that does not exist",
+      "doc": {
+        "file": "README.md",
+        "line": 55,
+        "quote": "uvicorn src.api.server:app --reload"
+      },
+      "evidence": [
+        {
+          "file": "src/api/main.py",
+          "line": 11,
+          "note": "The FastAPI app lives in src/api/main.py; there is no server.py"
+        }
+      ],
+      "why_it_matters": "A new developer's first attempt to start the API fails with a module-not-found error.",
+      "suggested_fix": "uvicorn src.api.main:app --reload"
+    },
+    {
+      "id": "D2",
+      "severity": "HIGH",
+      "category": "COMMAND",
+      "summary": "Dashboard command points to a file that does not exist",
+      "doc": {
+        "file": "README.md",
+        "line": 56,
+        "quote": "streamlit run dashboard/main.py"
+      },
+      "evidence": [
+        {
+          "file": "dashboard/app.py",
+          "line": null,
+          "note": "The Streamlit dashboard is dashboard/app.py"
+        }
+      ],
+      "why_it_matters": "The dashboard never starts when following the README.",
+      "suggested_fix": "streamlit run dashboard/app.py"
+    },
+    {
+      "id": "D3",
+      "severity": "HIGH",
+      "category": "ENV",
+      "summary": "Documented setting name is not the one the code reads",
+      "doc": {
+        "file": "README.md",
+        "line": 52,
+        "quote": "set `DB_CONNECTION_STRING` in `.env`"
+      },
+      "evidence": [
+        {
+          "file": "src/config.py",
+          "line": 17,
+          "note": "Settings reads DATABASE_URL"
+        }
+      ],
+      "why_it_matters": "Setting DB_CONNECTION_STRING has no effect, so the app silently keeps its default database.",
+      "suggested_fix": "To use PostgreSQL instead, set `DATABASE_URL` in `.env`."
+    },
+    {
+      "id": "D4",
+      "severity": "HIGH",
+      "category": "API",
+      "summary": "Endpoint GET /models does not exist",
+      "doc": {
+        "file": "README.md",
+        "line": 81,
+        "quote": "| GET | `/models` | Which tickers have a trained model ready |"
+      },
+      "evidence": [
+        {
+          "file": "src/api/routes.py",
+          "line": 69,
+          "note": "The route is GET /tickers"
+        }
+      ],
+      "why_it_matters": "Clients calling /models get a 404.",
+      "suggested_fix": "| GET | `/tickers` | Which tickers have a trained model ready |"
+    },
+    {
+      "id": "D5",
+      "severity": "MEDIUM",
+      "category": "PATH",
+      "summary": "Project structure lists a file that does not exist",
+      "doc": {
+        "file": "README.md",
+        "line": 104,
+        "quote": "endpoints.py         Endpoints"
+      },
+      "evidence": [
+        {
+          "file": "src/api/routes.py",
+          "line": null,
+          "note": "Endpoints are defined in routes.py"
+        }
+      ],
+      "why_it_matters": "Developers look for the endpoints in the wrong file.",
+      "suggested_fix": "routes.py            Endpoints"
+    },
+    {
+      "id": "D6",
+      "severity": "MEDIUM",
+      "category": "PATH",
+      "summary": "Project structure lists a renamed LSTM file",
+      "doc": {
+        "file": "README.md",
+        "line": 108,
+        "quote": "lstm_model.py        PyTorch LSTM"
+      },
+      "evidence": [
+        {
+          "file": "src/training/lstm_trainer.py",
+          "line": null,
+          "note": "The LSTM code is lstm_trainer.py"
+        }
+      ],
+      "why_it_matters": "Developers look for the LSTM code in a file that does not exist.",
+      "suggested_fix": "lstm_trainer.py      PyTorch LSTM"
+    },
+    {
+      "id": "D7",
+      "severity": "MEDIUM",
+      "category": "API",
+      "summary": "Endpoint POST /predict does not exist",
+      "doc": {
+        "file": "README.md",
+        "line": 85,
+        "quote": "| POST | `/predict` | Get predictions (`lstm`, `prophet`, `arima`, or `ensemble`) |"
+      },
+      "evidence": [
+        {
+          "file": "src/api/routes.py",
+          "line": 198,
+          "note": "The route is POST /forecast"
+        }
+      ],
+      "why_it_matters": "Clients calling /predict get a 404.",
+      "suggested_fix": "| POST | `/forecast` | Get predictions (`lstm`, `prophet`, `arima`, or `ensemble`) |"
+    },
+    {
+      "id": "D8",
+      "severity": "MEDIUM",
+      "category": "API",
+      "summary": "Health check uses the wrong HTTP method",
+      "doc": {
+        "file": "README.md",
+        "line": 80,
+        "quote": "| POST | `/health` | API status, database connectivity, trained tickers |"
+      },
+      "evidence": [
+        {
+          "file": "src/api/routes.py",
+          "line": 59,
+          "note": "The route is GET /health"
+        }
+      ],
+      "why_it_matters": "A POST request returns 405 Method Not Allowed.",
+      "suggested_fix": "| GET | `/health` | API status, database connectivity, trained tickers |"
+    },
+    {
+      "id": "D9",
+      "severity": "LOW",
+      "category": "VERSION",
+      "summary": "Python version in the stack is wrong",
+      "doc": {
+        "file": "README.md",
+        "line": 204,
+        "quote": "Python 3.9"
+      },
+      "evidence": [
+        {
+          "file": "Dockerfile.api",
+          "line": 3,
+          "note": "Base image is python:3.12-slim"
+        }
+      ],
+      "why_it_matters": "Developers may set up an older Python than the project uses.",
+      "suggested_fix": "Python 3.12"
+    },
+    {
+      "id": "D10",
+      "severity": "LOW",
+      "category": "DEPENDENCY",
+      "summary": "Redis is listed but not used",
+      "doc": {
+        "file": "README.md",
+        "line": 204,
+        "quote": "Redis"
+      },
+      "evidence": [
+        {
+          "file": "requirements.txt",
+          "line": null,
+          "note": "No redis package"
+        },
+        {
+          "file": "docker-compose.yml",
+          "line": null,
+          "note": "No Redis service"
+        }
+      ],
+      "why_it_matters": "Developers may install and run a service the project never uses.",
+      "suggested_fix": "Remove Redis from the stack list."
+    }
+  ],
+  "undocumented_settings": [
+    {
+      "name": "API_PORT",
+      "file": "src/config.py",
+      "line": 20,
+      "default": "8000"
+    },
+    {
+      "name": "API_BASE_URL",
+      "file": "dashboard/app.py",
+      "line": 34,
+      "default": "http://localhost:8000"
+    }
+  ],
+  "unverified": [],
+  "ok": [],
+  "note": "Benchmark: 10 errors were planted by hand into the README and Bob was not told. Findings, evidence and line numbers are exactly as Bob reported them. Result: 10 of 10 caught, 0 false alarms. Three README line numbers are off by one (fixed in a later skill version)."
+}

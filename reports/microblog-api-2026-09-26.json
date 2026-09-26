@@ -7,15 +7,21 @@
     "licence": "MIT",
     "target_folder": "audits/microblog-api"
   },
-  "audited_at": "2025-01-31",
-  "doc_files": ["README.md"],
+  "audited_at": "2026-09-26",
+  "doc_files": [
+    "README.md"
+  ],
   "summary": {
     "claims_checked": 15,
     "ok": 14,
     "drift": 1,
     "unverified": 0,
     "trust_score": 93,
-    "findings_by_severity": { "HIGH": 0, "MEDIUM": 1, "LOW": 0 }
+    "findings_by_severity": {
+      "HIGH": 0,
+      "MEDIUM": 1,
+      "LOW": 0
+    }
   },
   "findings": [
     {
@@ -23,49 +29,322 @@
       "severity": "MEDIUM",
       "category": "COMMAND",
       "summary": "`docker-compose` (deprecated hyphenated CLI) used throughout README; modern command is `docker compose`",
-      "claim_ids": ["C1", "C2", "C3"],
-      "doc": { "file": "README.md", "line": 34, "quote": "docker-compose up -d" },
+      "claim_ids": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 34,
+        "quote": "docker-compose up -d"
+      },
       "evidence": [
-        { "file": "docker-compose.yml", "line": 1, "note": "Compose file exists and is valid; the docker-compose standalone binary was removed in Docker Desktop 4.28+ (February 2024); the current command is `docker compose` (space, plugin subcommand)" }
+        {
+          "file": "docker-compose.yml",
+          "line": 1,
+          "note": "Compose file exists and is valid; the docker-compose standalone binary was removed in Docker Desktop 4.28+ (February 2024); the current command is `docker compose` (space, plugin subcommand)"
+        }
       ],
       "why_it_matters": "A developer using Docker Desktop 4.28 or newer will get 'command not found: docker-compose' and be unable to start the application.",
       "suggested_fix": "Replace all three occurrences of `docker-compose` with `docker compose` (space-separated) on README.md lines 34, 44, and 50."
     }
   ],
   "undocumented_settings": [
-    { "name": "DATABASE_URL", "file": "config.py", "line": 16, "default": "sqlite:///db.sqlite" },
-    { "name": "SQL_ECHO", "file": "config.py", "line": 18, "default": "" },
-    { "name": "SECRET_KEY", "file": "config.py", "line": 21, "default": "top-secret!" },
-    { "name": "ACCESS_TOKEN_MINUTES", "file": "config.py", "line": 23, "default": "15" },
-    { "name": "REFRESH_TOKEN_DAYS", "file": "config.py", "line": 24, "default": "7" },
-    { "name": "REFRESH_TOKEN_IN_COOKIE", "file": "config.py", "line": 25, "default": "yes" },
-    { "name": "REFRESH_TOKEN_IN_BODY", "file": "config.py", "line": 27, "default": "" },
-    { "name": "RESET_TOKEN_MINUTES", "file": "config.py", "line": 28, "default": "15" },
-    { "name": "PASSWORD_RESET_URL", "file": "config.py", "line": 29, "default": "http://localhost:3000/reset" },
-    { "name": "USE_CORS", "file": "config.py", "line": 31, "default": "yes" },
-    { "name": "GOOGLE_CLIENT_ID", "file": "config.py", "line": 37, "default": "" },
-    { "name": "GOOGLE_CLIENT_SECRET", "file": "config.py", "line": 38, "default": "" },
-    { "name": "GITHUB_CLIENT_ID", "file": "config.py", "line": 50, "default": "" },
-    { "name": "GITHUB_CLIENT_SECRET", "file": "config.py", "line": 51, "default": "" },
-    { "name": "OAUTH2_REDIRECT_URI", "file": "config.py", "line": 61, "default": "http://localhost:3000/oauth2/{provider}/callback" },
-    { "name": "DOCS_UI", "file": "config.py", "line": 67, "default": "elements" }
+    {
+      "name": "DATABASE_URL",
+      "file": "config.py",
+      "line": 16,
+      "default": "sqlite:///db.sqlite"
+    },
+    {
+      "name": "SQL_ECHO",
+      "file": "config.py",
+      "line": 18,
+      "default": ""
+    },
+    {
+      "name": "SECRET_KEY",
+      "file": "config.py",
+      "line": 21,
+      "default": "top-secret!"
+    },
+    {
+      "name": "ACCESS_TOKEN_MINUTES",
+      "file": "config.py",
+      "line": 23,
+      "default": "15"
+    },
+    {
+      "name": "REFRESH_TOKEN_DAYS",
+      "file": "config.py",
+      "line": 24,
+      "default": "7"
+    },
+    {
+      "name": "REFRESH_TOKEN_IN_COOKIE",
+      "file": "config.py",
+      "line": 25,
+      "default": "yes"
+    },
+    {
+      "name": "REFRESH_TOKEN_IN_BODY",
+      "file": "config.py",
+      "line": 27,
+      "default": ""
+    },
+    {
+      "name": "RESET_TOKEN_MINUTES",
+      "file": "config.py",
+      "line": 28,
+      "default": "15"
+    },
+    {
+      "name": "PASSWORD_RESET_URL",
+      "file": "config.py",
+      "line": 29,
+      "default": "http://localhost:3000/reset"
+    },
+    {
+      "name": "USE_CORS",
+      "file": "config.py",
+      "line": 31,
+      "default": "yes"
+    },
+    {
+      "name": "GOOGLE_CLIENT_ID",
+      "file": "config.py",
+      "line": 37,
+      "default": ""
+    },
+    {
+      "name": "GOOGLE_CLIENT_SECRET",
+      "file": "config.py",
+      "line": 38,
+      "default": ""
+    },
+    {
+      "name": "GITHUB_CLIENT_ID",
+      "file": "config.py",
+      "line": 50,
+      "default": ""
+    },
+    {
+      "name": "GITHUB_CLIENT_SECRET",
+      "file": "config.py",
+      "line": 51,
+      "default": ""
+    },
+    {
+      "name": "OAUTH2_REDIRECT_URI",
+      "file": "config.py",
+      "line": 61,
+      "default": "http://localhost:3000/oauth2/{provider}/callback"
+    },
+    {
+      "name": "DOCS_UI",
+      "file": "config.py",
+      "line": 67,
+      "default": "elements"
+    }
   ],
   "unverified": [],
   "ok": [
-    { "id": "C1", "category": "COMMAND", "claim": "docker-compose up -d", "doc": { "file": "README.md", "line": 34 }, "evidence": { "file": "docker-compose.yml", "line": 1 } },
-    { "id": "C2", "category": "COMMAND", "claim": "docker-compose run --rm microblog-api bash -c \"flask fake users 10 && flask fake posts 100\"", "doc": { "file": "README.md", "line": 44 }, "evidence": { "file": "docker-compose.yml", "line": 3 } },
-    { "id": "C3", "category": "COMMAND", "claim": "docker-compose down", "doc": { "file": "README.md", "line": 50 }, "evidence": { "file": "docker-compose.yml", "line": 1 } },
-    { "id": "C4", "category": "COMMAND", "claim": "pip install -r requirements.txt", "doc": { "file": "README.md", "line": 60 }, "evidence": { "file": "requirements.txt", "line": 1 } },
-    { "id": "C5", "category": "COMMAND", "claim": "alembic upgrade head", "doc": { "file": "README.md", "line": 66 }, "evidence": { "file": "alembic.ini", "line": 1 } },
-    { "id": "C6", "category": "COMMAND", "claim": "flask fake users 10", "doc": { "file": "README.md", "line": 67 }, "evidence": { "file": "api/fake.py", "line": 12 } },
-    { "id": "C7", "category": "COMMAND", "claim": "flask fake posts 100", "doc": { "file": "README.md", "line": 68 }, "evidence": { "file": "api/fake.py", "line": 35 } },
-    { "id": "C8", "category": "COMMAND", "claim": "flask run", "doc": { "file": "README.md", "line": 74 }, "evidence": { "file": "microblog.py", "line": 1 } },
-    { "id": "C9", "category": "PATH", "claim": ".env.example file exists", "doc": { "file": "README.md", "line": 23 }, "evidence": { "file": ".env.example", "line": 1 } },
-    { "id": "C10", "category": "PATH", "claim": "Copy .env.example to .env and enter config values", "doc": { "file": "README.md", "line": 27 }, "evidence": { "file": "config.py", "line": 4 } },
-    { "id": "C11", "category": "PATH", "claim": "requirements.txt", "doc": { "file": "README.md", "line": 61 }, "evidence": { "file": "requirements.txt", "line": 1 } },
-    { "id": "C12", "category": "ENV", "claim": "MICROBLOG_API_PORT controls Docker host port", "doc": { "file": "README.md", "line": 91 }, "evidence": { "file": "docker-compose.yml", "line": 7 } },
-    { "id": "C13", "category": "API", "claim": "API documentation at /docs URL", "doc": { "file": "README.md", "line": 39 }, "evidence": { "file": "api/app.py", "line": 54 } },
-    { "id": "C14", "category": "API", "claim": "application runs on localhost:5000", "doc": { "file": "README.md", "line": 77 }, "evidence": { "file": "Dockerfile", "line": 14 } },
-    { "id": "C15", "category": "VERSION", "claim": "Set up a Python 3 virtualenv", "doc": { "file": "README.md", "line": 55 }, "evidence": { "file": ".github/workflows/tests.yml", "line": 24 } }
-  ]
+    {
+      "id": "C1",
+      "category": "COMMAND",
+      "claim": "docker-compose up -d",
+      "doc": {
+        "file": "README.md",
+        "line": 34
+      },
+      "evidence": {
+        "file": "docker-compose.yml",
+        "line": 1
+      }
+    },
+    {
+      "id": "C2",
+      "category": "COMMAND",
+      "claim": "docker-compose run --rm microblog-api bash -c \"flask fake users 10 && flask fake posts 100\"",
+      "doc": {
+        "file": "README.md",
+        "line": 44
+      },
+      "evidence": {
+        "file": "docker-compose.yml",
+        "line": 3
+      }
+    },
+    {
+      "id": "C3",
+      "category": "COMMAND",
+      "claim": "docker-compose down",
+      "doc": {
+        "file": "README.md",
+        "line": 50
+      },
+      "evidence": {
+        "file": "docker-compose.yml",
+        "line": 1
+      }
+    },
+    {
+      "id": "C4",
+      "category": "COMMAND",
+      "claim": "pip install -r requirements.txt",
+      "doc": {
+        "file": "README.md",
+        "line": 60
+      },
+      "evidence": {
+        "file": "requirements.txt",
+        "line": 1
+      }
+    },
+    {
+      "id": "C5",
+      "category": "COMMAND",
+      "claim": "alembic upgrade head",
+      "doc": {
+        "file": "README.md",
+        "line": 66
+      },
+      "evidence": {
+        "file": "alembic.ini",
+        "line": 1
+      }
+    },
+    {
+      "id": "C6",
+      "category": "COMMAND",
+      "claim": "flask fake users 10",
+      "doc": {
+        "file": "README.md",
+        "line": 67
+      },
+      "evidence": {
+        "file": "api/fake.py",
+        "line": 12
+      }
+    },
+    {
+      "id": "C7",
+      "category": "COMMAND",
+      "claim": "flask fake posts 100",
+      "doc": {
+        "file": "README.md",
+        "line": 68
+      },
+      "evidence": {
+        "file": "api/fake.py",
+        "line": 35
+      }
+    },
+    {
+      "id": "C8",
+      "category": "COMMAND",
+      "claim": "flask run",
+      "doc": {
+        "file": "README.md",
+        "line": 74
+      },
+      "evidence": {
+        "file": "microblog.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C9",
+      "category": "PATH",
+      "claim": ".env.example file exists",
+      "doc": {
+        "file": "README.md",
+        "line": 23
+      },
+      "evidence": {
+        "file": ".env.example",
+        "line": 1
+      }
+    },
+    {
+      "id": "C10",
+      "category": "PATH",
+      "claim": "Copy .env.example to .env and enter config values",
+      "doc": {
+        "file": "README.md",
+        "line": 27
+      },
+      "evidence": {
+        "file": "config.py",
+        "line": 4
+      }
+    },
+    {
+      "id": "C11",
+      "category": "PATH",
+      "claim": "requirements.txt",
+      "doc": {
+        "file": "README.md",
+        "line": 61
+      },
+      "evidence": {
+        "file": "requirements.txt",
+        "line": 1
+      }
+    },
+    {
+      "id": "C12",
+      "category": "ENV",
+      "claim": "MICROBLOG_API_PORT controls Docker host port",
+      "doc": {
+        "file": "README.md",
+        "line": 91
+      },
+      "evidence": {
+        "file": "docker-compose.yml",
+        "line": 7
+      }
+    },
+    {
+      "id": "C13",
+      "category": "API",
+      "claim": "API documentation at /docs URL",
+      "doc": {
+        "file": "README.md",
+        "line": 39
+      },
+      "evidence": {
+        "file": "api/app.py",
+        "line": 54
+      }
+    },
+    {
+      "id": "C14",
+      "category": "API",
+      "claim": "application runs on localhost:5000",
+      "doc": {
+        "file": "README.md",
+        "line": 77
+      },
+      "evidence": {
+        "file": "Dockerfile",
+        "line": 14
+      }
+    },
+    {
+      "id": "C15",
+      "category": "VERSION",
+      "claim": "Set up a Python 3 virtualenv",
+      "doc": {
+        "file": "README.md",
+        "line": 55
+      },
+      "evidence": {
+        "file": ".github/workflows/tests.yml",
+        "line": 24
+      }
+    }
+  ],
+  "note": "Full /docdrift pipeline run. Bob wrote the audit date as 2025-01-31 by mistake; corrected to the real date. On review, D1 (docker-compose) was rejected: its evidence was general knowledge about Docker, not the repository, so it was not fixed (later skill versions list this under Outdated practices). The real gap, .env.example promising a complete settings list that did not exist, was fixed: README.md now documents all 23 settings config.py reads."
 }
