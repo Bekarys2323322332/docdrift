@@ -21,55 +21,61 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
   /* ------------------------------------------------------------------
      Design tokens. The full light palette lives on :root; the dark
      palette only redefines tokens, so every component follows the theme.
      ------------------------------------------------------------------ */
+  /* Visual idea: a proofreader's highlighter on stale docs.
+     Ink-blue text on cool paper, a highlighter yellow for "look here",
+     an electric blue for anything you can click, red for what the docs
+     claim and green for what the code proves. */
   :root {
     color-scheme: light;
-    --bg: #eef1ef;          /* page ground: grey with a slight green-teal bias */
-    --surface: #fbfcfb;     /* panels and cards */
-    --surface-2: #e4e9e6;   /* inset areas, table headers */
-    --ink: #172124;         /* main text */
-    --muted: #56666a;       /* secondary text */
-    --line: #d2dad6;        /* borders and dividers */
-    --accent: #0f6b7a;      /* interactive elements */
+    --bg: #eef0f5;          /* cool paper */
+    --surface: #fcfcfe;     /* cards and panels */
+    --surface-2: #e5e8f0;   /* inset areas, table headers */
+    --ink: #0f1b2d;         /* ink-blue main text */
+    --muted: #586277;       /* secondary text */
+    --line: #d4d9e4;        /* borders and dividers */
+    --accent: #2e5bff;      /* electric blue: interactive elements */
     --accent-ink: #ffffff;  /* text on accent */
-    --docs-bg: #fbe9e4;     /* "docs say" side of a finding */
-    --docs-ink: #8a2d1c;
-    --code-bg: #e2f1e7;     /* "code says" side of a finding */
-    --code-ink: #1d5a33;
-    --high: #b93a26;        /* severity colours (semantic, separate from accent) */
-    --medium: #a26207;
-    --low: #4a6f86;
-    --good: #2f7a47;
-    --warn: #a26207;
-    --bad: #b93a26;
-    --shadow: 0 1px 2px rgba(23, 33, 36, .06), 0 4px 16px rgba(23, 33, 36, .05);
-    --radius: 10px;
-    --font-display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-    --font-body: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --hl: #ffd84d;          /* highlighter yellow: emphasis marks */
+    --hl-ink: #0f1b2d;      /* text on the highlighter */
+    --docs-bg: #fde8e5;     /* "docs say" side of a finding */
+    --docs-ink: #a3261c;
+    --code-bg: #dff4ea;     /* "code says" side of a finding */
+    --code-ink: #0d6b47;
+    --high: #d0342c;        /* severity colours (semantic, separate from the accents) */
+    --medium: #b86a00;
+    --low: #4f6a8f;
+    --good: #0f8a5f;
+    --warn: #b86a00;
+    --bad: #d0342c;
+    --shadow: 0 1px 2px rgba(15, 27, 45, .06), 0 8px 24px rgba(15, 27, 45, .06);
+    --radius: 14px;
+    --font-display: "Bricolage Grotesque", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Instrument Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --bg: #0f1516; --surface: #172022; --surface-2: #1f2a2d; --ink: #e3ebe8; --muted: #9aaaa7;
-      --line: #2c393c; --accent: #5cc3d2; --accent-ink: #0b1213;
-      --docs-bg: #3a1f19; --docs-ink: #f3b3a3; --code-bg: #16301f; --code-ink: #a6dcb6;
-      --high: #f07a62; --medium: #e0a54a; --low: #8fb4cc; --good: #6cc38a; --warn: #e0a54a; --bad: #f07a62;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+      --bg: #0a1220; --surface: #111c2e; --surface-2: #1a2740; --ink: #e8ecf4; --muted: #95a1b8;
+      --line: #25324a; --accent: #7d9bff; --accent-ink: #0a1220; --hl: #ffd84d; --hl-ink: #0a1220;
+      --docs-bg: #3a1a1a; --docs-ink: #ffb3a8; --code-bg: #0f3326; --code-ink: #8fe0bd;
+      --high: #ff7a6b; --medium: #f2b457; --low: #9db5d8; --good: #4fd19a; --warn: #f2b457; --bad: #ff7a6b;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.3);
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #0f1516; --surface: #172022; --surface-2: #1f2a2d; --ink: #e3ebe8; --muted: #9aaaa7;
-    --line: #2c393c; --accent: #5cc3d2; --accent-ink: #0b1213;
-    --docs-bg: #3a1f19; --docs-ink: #f3b3a3; --code-bg: #16301f; --code-ink: #a6dcb6;
-    --high: #f07a62; --medium: #e0a54a; --low: #8fb4cc; --good: #6cc38a; --warn: #e0a54a; --bad: #f07a62;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+    --bg: #0a1220; --surface: #111c2e; --surface-2: #1a2740; --ink: #e8ecf4; --muted: #95a1b8;
+    --line: #25324a; --accent: #7d9bff; --accent-ink: #0a1220; --hl: #ffd84d; --hl-ink: #0a1220;
+    --docs-bg: #3a1a1a; --docs-ink: #ffb3a8; --code-bg: #0f3326; --code-ink: #8fe0bd;
+    --high: #ff7a6b; --medium: #f2b457; --low: #9db5d8; --good: #4fd19a; --warn: #f2b457; --bad: #ff7a6b;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.3);
   }
 
   /* ------------------------------------------------------------------
@@ -85,7 +91,9 @@
     padding-inline: 16px;
     padding-bottom: 96px; /* room for the sticky fix bar */
   }
-  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+  /* Highlighter mark: a yellow band behind the lower part of the text */
+  .hl { background: var(--hl); color: var(--hl-ink); padding: 0 8px; border-radius: 6px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
   code, .mono { font-family: var(--font-mono); font-size: .86em; }
   button, input, select { font: inherit; color: inherit; }
   a { color: var(--accent); }
@@ -100,9 +108,9 @@
     padding-block: 20px 16px;
   }
   .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .brand h1 { font-size: 26px; font-weight: 700; }
-  .brand h1 span { color: var(--accent); }
-  .brand p { margin: 0; color: var(--muted); font-size: 14px; }
+  .brand h1 { font-size: 32px; font-weight: 800; letter-spacing: -.02em; }
+  .brand h1 span { background: var(--hl); color: var(--hl-ink); padding: 0 8px; border-radius: 6px; margin-left: 2px; }
+  .brand p { margin: 0; color: var(--muted); font-size: 15px; }
   .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
   .btn {
@@ -180,13 +188,13 @@
   .ring text { font-family: var(--font-display); font-weight: 700; fill: var(--ink); }
   .ring .sub { font-family: var(--font-body); font-weight: 500; fill: var(--muted); font-size: 10px; letter-spacing: .08em; }
   .summary-main { display: grid; gap: 14px; min-width: 0; }
-  .summary-main h2 { font-size: 24px; overflow-wrap: anywhere; }
+  .summary-main h2 { font-size: 32px; font-weight: 800; letter-spacing: -.02em; overflow-wrap: anywhere; }
   .facts { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 13.5px; }
   .facts b { color: var(--ink); font-weight: 600; }
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
   @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  .stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
-  .stat .n { font-family: var(--font-display); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .stat { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+  .stat .n { font-family: var(--font-display); font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
   .stat .n.drift { color: var(--bad); } .stat .n.ok { color: var(--good); }
 
   .pill {
@@ -200,7 +208,7 @@
   /* Section headers */
   .section { display: grid; gap: 12px; }
   .section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
-  .section-head h3 { font-size: 19px; }
+  .section-head h3 { font-size: 24px; font-weight: 800; }
   .filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .chip {
     border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px;
@@ -217,7 +225,7 @@
   .finding.selected { border-color: var(--accent); }
   .f-head { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 10px; align-items: start; }
   .f-head input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--accent); cursor: pointer; }
-  .f-id { font-family: var(--font-display); font-weight: 700; font-size: 18px; line-height: 1.3; }
+  .f-id { font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1.3; }
   .f-title { display: grid; gap: 6px; min-width: 0; }
   .f-title .summary-text { font-weight: 600; overflow-wrap: anywhere; }
   .f-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -588,7 +596,7 @@ function renderDetail() {
 
     <div class="section">
       <div class="section-head">
-        <h3>Drift findings</h3>
+        <h3><span class="hl">Drift</span> findings</h3>
         ${r.findings.length ? `
         <div class="filters" role="group" aria-label="Filter findings">
           ${["ALL", ...SEVERITIES].map(sv => `<button type="button" class="chip" data-sev="${sv}" aria-pressed="${state.severity === sv}">${sv === "ALL" ? "All" : sv}</button>`).join("")}
