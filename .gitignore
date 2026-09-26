@@ -1,0 +1,13 @@
+# Cloned repositories being audited. They belong to other people, so they are not
+# committed here. Their reports are kept in reports/ and examples/ instead.
+audits/*
+!audits/.gitkeep
+
+# Secrets
+.env
+.env.local
+
+# OS and editor clutter
+.DS_Store
+Thumbs.db
+.vscode/

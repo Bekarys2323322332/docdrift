@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DocDrift Dashboard</title>
+<!--
+  DocDrift Dashboard
+  ------------------
+  A single-file viewer for DRIFT_REPORT.json files written by the DocDrift skills in IBM Bob.
+
+  How to use it:
+    1. Open this file in any browser (double-click it). No server or install needed.
+    2. Click "Load reports" (or drag .json files onto the page) and pick files from reports/.
+    3. Tick findings and copy the ready-made /docdrift-fix command into Bob's chat.
+
+  Two sample reports are built in so the page is never empty. They are clearly marked
+  as samples and can be removed.
+
+  Everything runs locally in the browser. Nothing is uploaded anywhere.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* ------------------------------------------------------------------
+     Design tokens. The full light palette lives on :root; the dark
+     palette only redefines tokens, so every component follows the theme.
+     ------------------------------------------------------------------ */
+  :root {
+    color-scheme: light;
+    --bg: #eef1ef;          /* page ground: grey with a slight green-teal bias */
+    --surface: #fbfcfb;     /* panels and cards */
+    --surface-2: #e4e9e6;   /* inset areas, table headers */
+    --ink: #172124;         /* main text */
+    --muted: #56666a;       /* secondary text */
+    --line: #d2dad6;        /* borders and dividers */
+    --accent: #0f6b7a;      /* interactive elements */
+    --accent-ink: #ffffff;  /* text on accent */
+    --docs-bg: #fbe9e4;     /* "docs say" side of a finding */
+    --docs-ink: #8a2d1c;
+    --code-bg: #e2f1e7;     /* "code says" side of a finding */
+    --code-ink: #1d5a33;
+    --high: #b93a26;        /* severity colours (semantic, separate from accent) */
+    --medium: #a26207;
+    --low: #4a6f86;
+    --good: #2f7a47;
+    --warn: #a26207;
+    --bad: #b93a26;
+    --shadow: 0 1px 2px rgba(23, 33, 36, .06), 0 4px 16px rgba(23, 33, 36, .05);
+    --radius: 10px;
+    --font-display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f1516; --surface: #172022; --surface-2: #1f2a2d; --ink: #e3ebe8; --muted: #9aaaa7;
+      --line: #2c393c; --accent: #5cc3d2; --accent-ink: #0b1213;
+      --docs-bg: #3a1f19; --docs-ink: #f3b3a3; --code-bg: #16301f; --code-ink: #a6dcb6;
+      --high: #f07a62; --medium: #e0a54a; --low: #8fb4cc; --good: #6cc38a; --warn: #e0a54a; --bad: #f07a62;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f1516; --surface: #172022; --surface-2: #1f2a2d; --ink: #e3ebe8; --muted: #9aaaa7;
+    --line: #2c393c; --accent: #5cc3d2; --accent-ink: #0b1213;
+    --docs-bg: #3a1f19; --docs-ink: #f3b3a3; --code-bg: #16301f; --code-ink: #a6dcb6;
+    --high: #f07a62; --medium: #e0a54a; --low: #8fb4cc; --good: #6cc38a; --warn: #e0a54a; --bad: #f07a62;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+  }
+
+  /* ------------------------------------------------------------------
+     Base
+     ------------------------------------------------------------------ */
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.5 var(--font-body);
+    padding-inline: 16px;
+    padding-bottom: 96px; /* room for the sticky fix bar */
+  }
+  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+  code, .mono { font-family: var(--font-mono); font-size: .86em; }
+  button, input, select { font: inherit; color: inherit; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  .wrap { max-width: 1240px; margin: 0 auto; }
+
+  /* Top bar */
+  .topbar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    padding-block: 20px 16px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .brand h1 { font-size: 26px; font-weight: 700; }
+  .brand h1 span { color: var(--accent); }
+  .brand p { margin: 0; color: var(--muted); font-size: 14px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn {
+    border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 8px;
+    cursor: pointer; font-weight: 500; font-size: 14px;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.small { padding: 4px 10px; font-size: 13px; }
+
+  .banner {
+    border: 1px solid var(--bad); color: var(--bad); background: var(--surface);
+    padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;
+  }
+  .drop-hint {
+    position: fixed; inset: 0; background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 3px dashed var(--accent); display: grid; place-items: center; z-index: 50;
+    font-family: var(--font-display); font-size: 28px; color: var(--accent); pointer-events: none;
+  }
+
+  /* Layout: report list on the left, detail on the right; stacks on narrow screens */
+  .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .label {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  }
+
+  /* Report list */
+  .reports { padding: 14px; display: grid; gap: 10px; position: sticky; top: 12px; }
+  @media (max-width: 860px) { .reports { position: static; } }
+  .report-item {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center;
+    padding: 10px 12px; border-radius: 8px; border: 1px solid transparent; cursor: pointer;
+    background: none; text-align: left; width: 100%;
+  }
+  .report-item:hover { background: var(--surface-2); }
+  .report-item[aria-current="true"] { border-color: var(--accent); background: var(--surface-2); }
+  .report-item .name { font-weight: 600; overflow-wrap: anywhere; }
+  .report-item .meta { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .tag-sample { font-size: 10.5px; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; color: var(--muted); }
+
+  .score-chip {
+    font-family: var(--font-display); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums;
+    padding: 1px 8px; border-radius: 6px; color: var(--surface);
+  }
+  .s-good { background: var(--good); } .s-warn { background: var(--warn); } .s-bad { background: var(--bad); } .s-none { background: var(--muted); }
+
+  /* Detail */
+  .detail { display: grid; gap: 20px; min-width: 0; }
+  .summary { padding: 20px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: center; }
+  @media (max-width: 560px) { .summary { grid-template-columns: minmax(0, 1fr); justify-items: start; } }
+  .ring { width: 132px; height: 132px; }
+  .ring text { font-family: var(--font-display); font-weight: 700; fill: var(--ink); }
+  .ring .sub { font-family: var(--font-body); font-weight: 500; fill: var(--muted); font-size: 10px; letter-spacing: .08em; }
+  .summary-main { display: grid; gap: 14px; min-width: 0; }
+  .summary-main h2 { font-size: 24px; overflow-wrap: anywhere; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 13.5px; }
+  .facts b { color: var(--ink); font-weight: 600; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+  .stat .n { font-family: var(--font-display); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .stat .n.drift { color: var(--bad); } .stat .n.ok { color: var(--good); }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: .04em;
+    padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap;
+  }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .sev-HIGH { color: var(--high); } .sev-MEDIUM { color: var(--medium); } .sev-LOW { color: var(--low); }
+  .licence-ok { color: var(--good); } .licence-warn { color: var(--warn); }
+
+  /* Section headers */
+  .section { display: grid; gap: 12px; }
+  .section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .section-head h3 { font-size: 19px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px;
+    font-size: 13px; cursor: pointer;
+  }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .filters select, .filters input[type="search"] {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 10px; font-size: 13px;
+  }
+  .filters input[type="search"] { width: 180px; max-width: 100%; }
+
+  /* Finding card: header row, then a two-column "docs say / code says" comparison */
+  .finding { padding: 16px; display: grid; gap: 12px; }
+  .finding.selected { border-color: var(--accent); }
+  .f-head { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 10px; align-items: start; }
+  .f-head input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--accent); cursor: pointer; }
+  .f-id { font-family: var(--font-display); font-weight: 700; font-size: 18px; line-height: 1.3; }
+  .f-title { display: grid; gap: 6px; min-width: 0; }
+  .f-title .summary-text { font-weight: 600; overflow-wrap: anywhere; }
+  .f-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .cat { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
+
+  .compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  @media (max-width: 680px) { .compare { grid-template-columns: minmax(0, 1fr); } }
+  .side { border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; min-width: 0; }
+  .side.docs { background: var(--docs-bg); color: var(--docs-ink); }
+  .side.code { background: var(--code-bg); color: var(--code-ink); }
+  .side .where { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; overflow-wrap: anywhere; }
+  .side blockquote { margin: 0; font-family: var(--font-mono); font-size: 13px; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .side.docs blockquote { text-decoration: line-through; text-decoration-thickness: 1px; }
+  .side ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+  .side li { overflow-wrap: anywhere; }
+  .why { color: var(--muted); font-size: 14px; margin: 0; }
+  .fix { display: grid; gap: 4px; }
+  .fix pre {
+    margin: 0; background: var(--surface-2); border-radius: 8px; padding: 8px 12px; font-family: var(--font-mono);
+    font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--surface-2); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  td code { overflow-wrap: anywhere; }
+
+  details.panel > summary { padding: 14px 16px; cursor: pointer; font-family: var(--font-display); font-weight: 600; font-size: 17px; }
+  details.panel[open] > summary { border-bottom: 1px solid var(--line); }
+
+  .empty { padding: 28px 20px; text-align: center; color: var(--muted); }
+  .empty h3 { color: var(--ink); margin-bottom: 6px; }
+  .clean { padding: 18px 20px; display: flex; gap: 12px; align-items: center; color: var(--good); font-weight: 600; }
+
+  /* Sticky fix bar: builds the /docdrift-fix command for Bob */
+  .fixbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .fixbar .inner { max-width: 1240px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .fixbar .count { font-weight: 600; white-space: nowrap; }
+  .fixbar code {
+    flex: 1 1 280px; min-width: 0; background: var(--surface-2); border-radius: 8px; padding: 8px 12px;
+    overflow-x: auto; white-space: nowrap; user-select: all;
+  }
+  .toast { color: var(--good); font-size: 13px; font-weight: 600; }
+  .foot { color: var(--muted); font-size: 12.5px; padding-block: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Doc<span>Drift</span></h1>
+      <p>Where your docs no longer match your code.</p>
+    </div>
+    <div class="actions">
+      <label class="btn primary" for="file-input">Load reports</label>
+      <input id="file-input" type="file" accept=".json,application/json" multiple hidden>
+      <button class="btn" id="theme-toggle" type="button">Switch theme</button>
+    </div>
+  </header>
+
+  <div id="error" class="banner" role="alert" hidden></div>
+
+  <main class="layout">
+    <aside class="panel reports" aria-label="Loaded reports">
+      <div class="label">Reports</div>
+      <div id="report-list"></div>
+      <p class="label" style="text-transform:none;letter-spacing:0;font-weight:400;margin:4px 0 0">
+        Drop <code>DRIFT_REPORT.json</code> files anywhere on the page, or use Load reports.
+      </p>
+    </aside>
+
+    <section class="detail" id="detail" aria-live="polite"></section>
+  </main>
+
+  <p class="foot">
+    DocDrift runs on IBM Bob: the audits and fixes are done by the Docs Auditor and Docs Fixer modes.
+    This page only reads the reports, locally in your browser.
+  </p>
+</div>
+
+<div class="drop-hint" id="drop-hint" hidden>Drop reports to load them</div>
+
+<div class="fixbar" id="fixbar">
+  <div class="inner">
+    <span class="count" id="fix-count">0 selected</span>
+    <code id="fix-command">Tick findings to build a fix command for Bob</code>
+    <button class="btn small" id="select-high" type="button">Select HIGH</button>
+    <button class="btn small" id="select-none" type="button">Clear</button>
+    <button class="btn primary small" id="copy-command" type="button" disabled>Copy command</button>
+    <span class="toast" id="toast" hidden>Copied. Paste it into Bob's chat.</span>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   Sample reports.
+   These are built into the page so it opens in a working state.
+   They were rebuilt from real runs during development:
+   - the planted-errors benchmark (10 errors planted by hand into my own README);
+     findings, evidence and line numbers are exactly as Bob reported them
+   - the audit of the open-source flask-realworld-example-app project; the summary is
+     Bob's, and the short verified-claims list comes from a manual spot-check
+   ===================================================================== */
+const SAMPLE_REPORTS = [
+  {
+    tool: "DocDrift", schema_version: 1, sample: true,
+    repo: { name: "time_forecasting (benchmark)", source: "local project with 10 planted errors", licence: "Own project", target_folder: "." },
+    audited_at: "2026-09-26",
+    doc_files: ["README.md"],
+    summary: { claims_checked: 43, ok: 33, drift: 10, unverified: 0, trust_score: 77, findings_by_severity: { HIGH: 4, MEDIUM: 4, LOW: 2 } },
+    findings: [
+      { id: "D1", severity: "HIGH", category: "COMMAND", summary: "Start command points to a module that does not exist",
+        doc: { file: "README.md", line: 55, quote: "uvicorn src.api.server:app --reload" },
+        evidence: [{ file: "src/api/main.py", line: 11, note: "The FastAPI app lives in src/api/main.py; there is no server.py" }],
+        why_it_matters: "A new developer's first attempt to start the API fails with a module-not-found error.",
+        suggested_fix: "uvicorn src.api.main:app --reload" },
+      { id: "D2", severity: "HIGH", category: "COMMAND", summary: "Dashboard command points to a file that does not exist",
+        doc: { file: "README.md", line: 56, quote: "streamlit run dashboard/main.py" },
+        evidence: [{ file: "dashboard/app.py", line: null, note: "The Streamlit dashboard is dashboard/app.py" }],
+        why_it_matters: "The dashboard never starts when following the README.",
+        suggested_fix: "streamlit run dashboard/app.py" },
+      { id: "D3", severity: "HIGH", category: "ENV", summary: "Documented setting name is not the one the code reads",
+        doc: { file: "README.md", line: 52, quote: "set `DB_CONNECTION_STRING` in `.env`" },
+        evidence: [{ file: "src/config.py", line: 17, note: "Settings reads DATABASE_URL" }],
+        why_it_matters: "Setting DB_CONNECTION_STRING has no effect, so the app silently keeps its default database.",
+        suggested_fix: "To use PostgreSQL instead, set `DATABASE_URL` in `.env`." },
+      { id: "D4", severity: "HIGH", category: "API", summary: "Endpoint GET /models does not exist",
+        doc: { file: "README.md", line: 81, quote: "| GET | `/models` | Which tickers have a trained model ready |" },
+        evidence: [{ file: "src/api/routes.py", line: 69, note: "The route is GET /tickers" }],
+        why_it_matters: "Clients calling /models get a 404.",
+        suggested_fix: "| GET | `/tickers` | Which tickers have a trained model ready |" },
+      { id: "D5", severity: "MEDIUM", category: "PATH", summary: "Project structure lists a file that does not exist",
+        doc: { file: "README.md", line: 104, quote: "endpoints.py         Endpoints" },
+        evidence: [{ file: "src/api/routes.py", line: null, note: "Endpoints are defined in routes.py" }],
+        why_it_matters: "Developers look for the endpoints in the wrong file.",
+        suggested_fix: "routes.py            Endpoints" },
+      { id: "D6", severity: "MEDIUM", category: "PATH", summary: "Project structure lists a renamed LSTM file",
+        doc: { file: "README.md", line: 108, quote: "lstm_model.py        PyTorch LSTM" },
+        evidence: [{ file: "src/training/lstm_trainer.py", line: null, note: "The LSTM code is lstm_trainer.py" }],
+        why_it_matters: "Developers look for the LSTM code in a file that does not exist.",
+        suggested_fix: "lstm_trainer.py      PyTorch LSTM" },
+      { id: "D7", severity: "MEDIUM", category: "API", summary: "Endpoint POST /predict does not exist",
+        doc: { file: "README.md", line: 85, quote: "| POST | `/predict` | Get predictions (`lstm`, `prophet`, `arima`, or `ensemble`) |" },
+        evidence: [{ file: "src/api/routes.py", line: 198, note: "The route is POST /forecast" }],
+        why_it_matters: "Clients calling /predict get a 404.",
+        suggested_fix: "| POST | `/forecast` | Get predictions (`lstm`, `prophet`, `arima`, or `ensemble`) |" },
+      { id: "D8", severity: "MEDIUM", category: "API", summary: "Health check uses the wrong HTTP method",
+        doc: { file: "README.md", line: 80, quote: "| POST | `/health` | API status, database connectivity, trained tickers |" },
+        evidence: [{ file: "src/api/routes.py", line: 59, note: "The route is GET /health" }],
+        why_it_matters: "A POST request returns 405 Method Not Allowed.",
+        suggested_fix: "| GET | `/health` | API status, database connectivity, trained tickers |" },
+      { id: "D9", severity: "LOW", category: "VERSION", summary: "Python version in the stack is wrong",
+        doc: { file: "README.md", line: 204, quote: "Python 3.9" },
+        evidence: [{ file: "Dockerfile.api", line: 3, note: "Base image is python:3.12-slim" }],
+        why_it_matters: "Developers may set up an older Python than the project uses.",
+        suggested_fix: "Python 3.12" },
+      { id: "D10", severity: "LOW", category: "DEPENDENCY", summary: "Redis is listed but not used",
+        doc: { file: "README.md", line: 204, quote: "Redis" },
+        evidence: [
+          { file: "requirements.txt", line: null, note: "No redis package" },
+          { file: "docker-compose.yml", line: null, note: "No Redis service" }
+        ],
+        why_it_matters: "Developers may install and run a service the project never uses.",
+        suggested_fix: "Remove Redis from the stack list." }
+    ],
+    undocumented_settings: [
+      { name: "API_PORT", file: "src/config.py", line: 20, default: "8000" },
+      { name: "API_BASE_URL", file: "dashboard/app.py", line: 34, default: "http://localhost:8000" }
+    ],
+    unverified: [],
+    ok: []
+  },
+  {
+    tool: "DocDrift", schema_version: 1, sample: true,
+    repo: { name: "flask-realworld-example-app", source: "https://github.com/gothinkster/flask-realworld-example-app", licence: "MIT", target_folder: "audits/flask-realworld-example-app" },
+    audited_at: "2026-09-26",
+    doc_files: ["README.rst"],
+    summary: { claims_checked: 16, ok: 16, drift: 0, unverified: 0, trust_score: 100, findings_by_severity: { HIGH: 0, MEDIUM: 0, LOW: 0 } },
+    findings: [],
+    undocumented_settings: [],
+    unverified: [],
+    ok: [
+      { id: "C1", category: "ENV", claim: "export CONDUIT_SECRET=...", doc: { file: "README.rst", line: 16 }, evidence: { file: "conduit/settings.py", line: 10 } },
+      { id: "C2", category: "ENV", claim: "export FLASK_APP=/path/to/autoapp.py", doc: { file: "README.rst", line: 21 }, evidence: { file: "autoapp.py", line: null } },
+      { id: "C3", category: "ENV", claim: "export FLASK_DEBUG=1", doc: { file: "README.rst", line: 22 }, evidence: { file: "autoapp.py", line: 8 } },
+      { id: "C4", category: "PATH", claim: "pip install -r requirements/dev.txt", doc: { file: "README.rst", line: 28 }, evidence: { file: "requirements/dev.txt", line: null } },
+      { id: "C5", category: "ENV", claim: "DATABASE_URL (PostgreSQL URI in production)", doc: { file: "README.rst", line: 48 }, evidence: { file: "conduit/settings.py", line: 37 } },
+      { id: "C6", category: "COMMAND", claim: "flask test", doc: { file: "README.rst", line: 67 }, evidence: { file: "conduit/commands.py", line: 17 } }
+    ]
+  }
+];
+
+/* =====================================================================
+   State
+   ===================================================================== */
+const state = {
+  reports: [],                                  // loaded reports, samples first (filled below)
+  active: 0,                                    // index of the report on screen
+  severity: "ALL",                              // severity filter
+  category: "ALL",                              // category filter
+  query: "",                                    // text search
+  selected: new Set()                           // finding IDs ticked for fixing
+};
+
+const SEVERITIES = ["HIGH", "MEDIUM", "LOW"];
+
+const PERMISSIVE = /^(mit|apache|bsd|isc|unlicense|0bsd|zlib|own project)/i;
+
+/* Escape any text that comes from a report before putting it into HTML.
+   Reports are written about other people's repositories, so treat them as untrusted. */
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* "file.py:12", or just "file.py" when the line is unknown */
+function where(loc) {
+  if (!loc || !loc.file) return "";
+  return loc.line ? `${loc.file}:${loc.line}` : loc.file;
+}
+
+function scoreClass(score) {
+  if (score === null || score === undefined) return "s-none";
+  if (score >= 90) return "s-good";
+  if (score >= 70) return "s-warn";
+  return "s-bad";
+}
+
+/* Check that a loaded file looks like a DocDrift report and fill in missing parts,
+   so a slightly incomplete report still renders instead of breaking the page. */
+function normalise(raw, fileName) {
+  if (!raw || typeof raw !== "object" || !raw.summary || !Array.isArray(raw.findings)) {
+    throw new Error(`${fileName} is not a DocDrift report (it needs "summary" and "findings").`);
+  }
+  const r = { ...raw };
+  r.repo = { name: fileName.replace(/\.json$/i, ""), ...(raw.repo || {}) };
+  r.findings = raw.findings.map((f, i) => ({
+    id: f.id || `D${i + 1}`,
+    severity: SEVERITIES.includes(String(f.severity).toUpperCase()) ? String(f.severity).toUpperCase() : "LOW",
+    category: f.category || "OTHER",
+    summary: f.summary || "",
+    doc: f.doc || {},
+    evidence: Array.isArray(f.evidence) ? f.evidence : (f.evidence ? [f.evidence] : []),
+    why_it_matters: f.why_it_matters || "",
+    suggested_fix: f.suggested_fix || "",
+    claim_ids: f.claim_ids || []
+  }));
+  r.undocumented_settings = Array.isArray(raw.undocumented_settings) ? raw.undocumented_settings : [];
+  r.unverified = Array.isArray(raw.unverified) ? raw.unverified : [];
+  r.ok = Array.isArray(raw.ok) ? raw.ok : [];
+  r.doc_files = Array.isArray(raw.doc_files) ? raw.doc_files : [];
+  return r;
+}
+
+/* =====================================================================
+   Rendering
+   ===================================================================== */
+function renderList() {
+  const list = document.getElementById("report-list");
+  if (!state.reports.length) {
+    list.innerHTML = `<p class="why">No reports loaded.</p>`;
+    return;
+  }
+  list.innerHTML = state.reports.map((r, i) => {
+    const s = r.summary.trust_score;
+    return `
+      <button class="report-item" type="button" data-index="${i}" aria-current="${i === state.active}">
+        <span class="name">${esc(r.repo.name)}</span>
+        <span class="score-chip ${scoreClass(s)}">${s === null || s === undefined ? "n/a" : esc(s) + "%"}</span>
+        <span class="meta">
+          <span>${esc(r.audited_at || "no date")}</span>
+          <span>${esc(r.summary.drift ?? 0)} drift</span>
+          ${r.sample ? `<span class="tag-sample">sample</span>` : ""}
+        </span>
+      </button>`;
+  }).join("");
+}
+
+function ring(score) {
+  // Circular gauge for the trust score, drawn to scale: the arc length is score% of the circle.
+  const r = 52, c = 2 * Math.PI * r;
+  const pct = score === null || score === undefined ? 0 : Math.max(0, Math.min(100, score));
+  const colour = { "s-good": "var(--good)", "s-warn": "var(--warn)", "s-bad": "var(--bad)", "s-none": "var(--muted)" }[scoreClass(score)];
+  return `
+    <svg class="ring" viewBox="0 0 132 132" role="img" aria-label="Docs trust score ${score ?? "not available"}">
+      <circle cx="66" cy="66" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="12"/>
+      <circle cx="66" cy="66" r="${r}" fill="none" stroke="${colour}" stroke-width="12" stroke-linecap="round"
+        stroke-dasharray="${(pct / 100) * c} ${c}" transform="rotate(-90 66 66)"/>
+      <text x="66" y="70" text-anchor="middle" font-size="30">${score === null || score === undefined ? "n/a" : esc(score) + "%"}</text>
+      <text class="sub" x="66" y="88" text-anchor="middle">TRUST SCORE</text>
+    </svg>`;
+}
+
+function renderDetail() {
+  const el = document.getElementById("detail");
+  const r = state.reports[state.active];
+  if (!r) {
+    el.innerHTML = `<div class="panel empty"><h3>No report selected</h3><p>Load a DRIFT_REPORT.json from the reports folder to see it here.</p></div>`;
+    updateFixBar();
+    return;
+  }
+
+  const s = r.summary;
+  const bySev = s.findings_by_severity || {};
+  const licence = r.repo.licence || "unknown";
+  const licenceOk = PERMISSIVE.test(licence);
+  const source = r.repo.source && /^https?:\/\//.test(r.repo.source)
+    ? `<a href="${esc(r.repo.source)}" target="_blank" rel="noopener">${esc(r.repo.source)}</a>`
+    : esc(r.repo.source || "local");
+
+  // Filters
+  const cats = [...new Set(r.findings.map(f => f.category))].sort();
+  const q = state.query.toLowerCase();
+  const shown = r.findings.filter(f =>
+    (state.severity === "ALL" || f.severity === state.severity) &&
+    (state.category === "ALL" || f.category === state.category) &&
+    (!q || JSON.stringify(f).toLowerCase().includes(q))
+  );
+
+  el.innerHTML = `
+    <div class="panel summary">
+      ${ring(s.trust_score)}
+      <div class="summary-main">
+        <div>
+          <div class="label">${r.sample ? "Sample report" : "Report"} &middot; ${esc(r.audited_at || "no date")}</div>
+          <h2>${esc(r.repo.name)}</h2>
+        </div>
+        <div class="facts">
+          <span>Source <b>${source}</b></span>
+          <span>Docs <b>${esc(r.doc_files.join(", ") || "auto-detected")}</b></span>
+          <span class="pill ${licenceOk ? "licence-ok" : "licence-warn"}" title="${licenceOk ? "Permissive licence" : "Check the licence before using this project"}">Licence: ${esc(licence)}</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="label">Claims</div><div class="n">${esc(s.claims_checked ?? 0)}</div></div>
+          <div class="stat"><div class="label">OK</div><div class="n ok">${esc(s.ok ?? 0)}</div></div>
+          <div class="stat"><div class="label">Drift</div><div class="n drift">${esc(s.drift ?? 0)}</div></div>
+          <div class="stat"><div class="label">Unverified</div><div class="n">${esc(s.unverified ?? 0)}</div></div>
+        </div>
+        <div class="f-tags">
+          ${SEVERITIES.map(sv => `<span class="pill sev-${sv}">${esc(bySev[sv] ?? r.findings.filter(f => f.severity === sv).length)} ${sv}</span>`).join("")}
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h3>Drift findings</h3>
+        ${r.findings.length ? `
+        <div class="filters" role="group" aria-label="Filter findings">
+          ${["ALL", ...SEVERITIES].map(sv => `<button type="button" class="chip" data-sev="${sv}" aria-pressed="${state.severity === sv}">${sv === "ALL" ? "All" : sv}</button>`).join("")}
+          <select id="cat-filter" aria-label="Category">
+            <option value="ALL">All categories</option>
+            ${cats.map(c => `<option value="${esc(c)}" ${state.category === c ? "selected" : ""}>${esc(c)}</option>`).join("")}
+          </select>
+          <input id="search" type="search" placeholder="Search findings" value="${esc(state.query)}" aria-label="Search findings">
+        </div>` : ""}
+      </div>
+      ${!r.findings.length
+        ? `<div class="panel clean">No drift found. Every checkable claim in the docs matches the code.</div>`
+        : !shown.length
+          ? `<div class="panel empty">No findings match these filters.</div>`
+          : shown.map(renderFinding).join("")}
+    </div>
+
+    ${r.undocumented_settings.length ? `
+    <div class="section">
+      <div class="section-head"><h3>Settings the docs never mention</h3></div>
+      <div class="panel table-wrap">
+        <table>
+          <thead><tr><th>Setting</th><th>Read at</th><th>Default in code</th></tr></thead>
+          <tbody>${r.undocumented_settings.map(u => `
+            <tr><td><code>${esc(u.name)}</code></td><td><code>${esc(where(u))}</code></td><td>${u.default !== undefined && u.default !== null ? `<code>${esc(u.default)}</code>` : "none"}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>` : ""}
+
+    ${r.unverified.length ? `
+    <details class="panel">
+      <summary>Unverified claims (${r.unverified.length})</summary>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Claim</th><th>In docs</th><th>Why not verified</th></tr></thead>
+        <tbody>${r.unverified.map(u => `
+          <tr><td>${esc(u.id)}</td><td>${esc(u.claim)}</td><td><code>${esc(where(u.doc))}</code></td><td>${esc(u.searched)}</td></tr>`).join("")}
+        </tbody>
+      </table></div>
+    </details>` : ""}
+
+    ${r.ok.length ? `
+    <details class="panel">
+      <summary>Verified claims (${r.ok.length}${r.ok.length < (s.ok ?? 0) ? ` of ${esc(s.ok)} listed` : ""})</summary>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Category</th><th>Claim</th><th>In docs</th><th>Proof in code</th></tr></thead>
+        <tbody>${r.ok.map(o => `
+          <tr><td>${esc(o.id)}</td><td>${esc(o.category)}</td><td>${esc(o.claim)}</td><td><code>${esc(where(o.doc))}</code></td><td><code>${esc(where(o.evidence))}</code></td></tr>`).join("")}
+        </tbody>
+      </table></div>
+    </details>` : ""}
+  `;
+  updateFixBar();
+}
+
+function renderFinding(f) {
+  const checked = state.selected.has(f.id);
+  return `
+    <article class="panel finding ${checked ? "selected" : ""}">
+      <div class="f-head">
+        <input type="checkbox" id="pick-${esc(f.id)}" data-pick="${esc(f.id)}" ${checked ? "checked" : ""} aria-label="Select ${esc(f.id)} for fixing">
+        <label class="f-id" for="pick-${esc(f.id)}">${esc(f.id)}</label>
+        <div class="f-title">
+          <div class="f-tags">
+            <span class="pill sev-${f.severity}">${f.severity}</span>
+            <span class="cat">${esc(f.category)}</span>
+            ${f.claim_ids.length ? `<span class="cat">claims ${esc(f.claim_ids.join(", "))}</span>` : ""}
+          </div>
+          <div class="summary-text">${esc(f.summary)}</div>
+        </div>
+      </div>
+      <div class="compare">
+        <div class="side docs">
+          <div class="label" style="color:inherit">Docs say</div>
+          <div class="where">${esc(where(f.doc) || "location not given")}</div>
+          <blockquote>${esc(f.doc.quote || "")}</blockquote>
+        </div>
+        <div class="side code">
+          <div class="label" style="color:inherit">Code says</div>
+          <ul>${f.evidence.map(e => `<li><span class="where">${esc(where(e))}</span>${e.note ? ` &middot; ${esc(e.note)}` : ""}</li>`).join("") || "<li>No evidence given</li>"}</ul>
+        </div>
+      </div>
+      ${f.why_it_matters ? `<p class="why">${esc(f.why_it_matters)}</p>` : ""}
+      ${f.suggested_fix ? `<div class="fix"><div class="label">Suggested fix</div><pre>${esc(f.suggested_fix)}</pre></div>` : ""}
+    </article>`;
+}
+
+/* The fix bar turns the ticked findings into a /docdrift-fix command for Bob's chat. */
+function currentCommand() {
+  const r = state.reports[state.active];
+  if (!r || !state.selected.size) return "";
+  const order = r.findings.map(f => f.id).filter(id => state.selected.has(id)); // keep report order
+  const target = r.repo.target_folder || ".";
+  return `/docdrift-fix ${target} ${order.join(" ")}`;
+}
+
+function updateFixBar() {
+  const cmd = currentCommand();
+  document.getElementById("fix-count").textContent = `${state.selected.size} selected`;
+  document.getElementById("fix-command").textContent = cmd || "Tick findings to build a fix command for Bob";
+  document.getElementById("copy-command").disabled = !cmd;
+  const r = state.reports[state.active];
+  document.getElementById("select-high").disabled = !r || !r.findings.some(f => f.severity === "HIGH");
+}
+
+function render() {
+  renderList();
+  renderDetail();
+}
+
+/* =====================================================================
+   Loading files (button and drag-and-drop)
+   ===================================================================== */
+function showError(message) {
+  const box = document.getElementById("error");
+  box.textContent = message;
+  box.hidden = !message;
+}
+
+async function loadFiles(fileList) {
+  const errors = [];
+  let firstNew = null;
+  for (const file of fileList) {
+    if (!/\.json$/i.test(file.name)) { errors.push(`${file.name} was skipped: only .json reports can be loaded.`); continue; }
+    try {
+      const report = normalise(JSON.parse(await file.text()), file.name);
+      state.reports.push(report);
+      if (firstNew === null) firstNew = state.reports.length - 1;
+    } catch (err) {
+      errors.push(err instanceof SyntaxError ? `${file.name} is not valid JSON. Ask Bob to rewrite the report.` : err.message);
+    }
+  }
+  showError(errors.join(" "));
+  if (firstNew !== null) { state.active = firstNew; resetView(); }
+  render();
+}
+
+function resetView() {
+  state.selected.clear();
+  state.severity = "ALL";
+  state.category = "ALL";
+  state.query = "";
+}
+
+document.getElementById("file-input").addEventListener("change", e => {
+  // Copy the list first: clearing the input (so the same file can be loaded again)
+  // empties the live FileList while the files are still being read.
+  loadFiles([...e.target.files]);
+  e.target.value = "";
+});
+
+let dragDepth = 0;
+const hint = document.getElementById("drop-hint");
+window.addEventListener("dragenter", e => { if ([...e.dataTransfer.types].includes("Files")) { dragDepth++; hint.hidden = false; } });
+window.addEventListener("dragleave", () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) hint.hidden = true; });
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => {
+  e.preventDefault();
+  dragDepth = 0; hint.hidden = true;
+  if (e.dataTransfer.files.length) loadFiles([...e.dataTransfer.files]);
+});
+
+/* =====================================================================
+   Clicks and inputs (one delegated listener each)
+   ===================================================================== */
+document.addEventListener("click", e => {
+  const item = e.target.closest(".report-item");
+  if (item) {
+    state.active = Number(item.dataset.index);
+    resetView();
+    render();
+    return;
+  }
+  const chip = e.target.closest("[data-sev]");
+  if (chip) { state.severity = chip.dataset.sev; renderDetail(); }
+});
+
+document.addEventListener("change", e => {
+  if (e.target.matches("[data-pick]")) {
+    const id = e.target.dataset.pick;
+    e.target.checked ? state.selected.add(id) : state.selected.delete(id);
+    e.target.closest(".finding").classList.toggle("selected", e.target.checked);
+    updateFixBar();
+  }
+  if (e.target.id === "cat-filter") { state.category = e.target.value; renderDetail(); }
+});
+
+document.addEventListener("input", e => {
+  if (e.target.id === "search") {
+    state.query = e.target.value;
+    renderDetail();
+    // Re-rendering replaces the search box, so put the cursor back where it was.
+    const box = document.getElementById("search");
+    if (box) { box.focus(); box.setSelectionRange(box.value.length, box.value.length); }
+  }
+});
+
+document.getElementById("select-high").addEventListener("click", () => {
+  const r = state.reports[state.active];
+  if (!r) return;
+  r.findings.filter(f => f.severity === "HIGH").forEach(f => state.selected.add(f.id));
+  renderDetail();
+});
+document.getElementById("select-none").addEventListener("click", () => { state.selected.clear(); renderDetail(); });
+
+document.getElementById("copy-command").addEventListener("click", () => {
+  const cmd = currentCommand();
+  const toast = document.getElementById("toast");
+  const done = () => {
+    toast.textContent = "Copied. Paste it into Bob's chat.";
+    toast.hidden = false;
+    setTimeout(() => (toast.hidden = true), 2500);
+  };
+  // Clipboard can be refused (for example on some file:// pages); fall back to selecting the text.
+  navigator.clipboard?.writeText(cmd).then(done).catch(selectCommand) ?? selectCommand();
+});
+function selectCommand() {
+  const range = document.createRange();
+  range.selectNodeContents(document.getElementById("fix-command"));
+  const sel = window.getSelection();
+  sel.removeAllRanges(); sel.addRange(range);
+  const toast = document.getElementById("toast");
+  toast.textContent = "Selected. Press Ctrl+C to copy.";
+  toast.hidden = false;
+}
+
+/* Theme toggle: remembers the choice in this browser only. */
+const THEME_KEY = "docdrift-theme";
+function applyTheme(theme) { if (theme) document.documentElement.dataset.theme = theme; }
+try { applyTheme(localStorage.getItem(THEME_KEY)); } catch (_) { /* storage blocked: use system theme */ }
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  const isDark = document.documentElement.dataset.theme
+    ? document.documentElement.dataset.theme === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = isDark ? "light" : "dark";
+  applyTheme(next);
+  try { localStorage.setItem(THEME_KEY, next); } catch (_) { /* ignore */ }
+});
+
+// Samples go through the same checks as loaded files, so they render the same way.
+state.reports = SAMPLE_REPORTS.map(r => normalise(r, r.repo.name));
+render();
+</script>
+</body>
+</html>

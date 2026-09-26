@@ -1,0 +1,26 @@
+# Files Bob must never read in the DocDrift workspace or in audited repositories.
+
+# Secrets: never read real environment files (the .env.example template is allowed).
+**/.env
+**/.env.local
+**/.env.*.local
+
+# The benchmark answer key: if Bob could read it, the benchmark would be meaningless.
+benchmark/ANSWER_KEY.md
+
+# Evidence and notes for the hackathon submission, not part of any audit.
+bob_sessions/
+NOTES.md
+
+# Large or generated folders: slow and costly to read, never needed to check docs.
+**/node_modules/
+**/venv/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/dist/
+**/obj/
+**/.git/
+**/*.db
+**/*.sqlite
+**/*.ipynb
