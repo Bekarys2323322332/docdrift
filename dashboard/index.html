@@ -271,11 +271,25 @@
   }
   .fixbar .inner { max-width: 1240px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .fixbar .count { font-weight: 600; white-space: nowrap; }
-  .fixbar code {
+  .fixbar .inner code {
     flex: 1 1 280px; min-width: 0; background: var(--surface-2); border-radius: 8px; padding: 8px 12px;
     overflow-x: auto; white-space: nowrap; user-select: all;
   }
   .toast { color: var(--good); font-size: 13px; font-weight: 600; }
+  /* "What is this?" help for the fix bar */
+  .help-btn {
+    width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
+    font-family: var(--font-display); font-weight: 800; font-size: 15px; cursor: pointer; flex: none;
+  }
+  .help-btn[aria-expanded="true"] { background: var(--hl); color: var(--hl-ink); border-color: var(--hl); }
+  .help-panel {
+    max-width: 1240px; margin: 0 auto 10px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; display: grid; gap: 8px; font-size: 14px;
+  }
+  .help-panel h4 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 800; }
+  .help-panel ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  .help-panel p { margin: 0; color: var(--muted); }
+  .help-panel code { background: var(--surface-2); border-radius: 4px; padding: 1px 5px; }
   .foot { color: var(--muted); font-size: 12.5px; padding-block: 24px; }
 </style>
 </head>
@@ -332,12 +346,25 @@
 <div class="drop-hint" id="drop-hint" hidden>Drop reports to load them</div>
 
 <div class="fixbar" id="fixbar">
+  <section class="help-panel" id="fix-help" hidden aria-label="How the fix command works">
+    <h4>What is the fix command?</h4>
+    <p>It is a ready-made instruction for IBM Bob that says "fix these findings in the docs". This page cannot change files itself, so it writes the instruction for you.</p>
+    <ol>
+      <li>Tick the findings you want fixed (or click <b>Select HIGH</b>).</li>
+      <li>Click <b>Copy command</b>. It copies a line like <code>/docdrift-fix audits/my-repo D1 D3</code>.</li>
+      <li>In Bob IDE, with your DocDrift folder open, paste it into the chat and press Enter.</li>
+      <li>Bob's <b>Docs Fixer</b> corrects only those findings in the documentation. It never changes code.</li>
+      <li>Check the changes Bob shows you before you commit them.</li>
+    </ol>
+    <p>The repository must still be in the <code>audits</code> folder of your DocDrift workspace, where the audit put it.</p>
+  </section>
   <div class="inner">
     <span class="count" id="fix-count">0 selected</span>
     <code id="fix-command">Tick findings to build a fix command for Bob</code>
     <button class="btn small" id="select-high" type="button">Select HIGH</button>
     <button class="btn small" id="select-none" type="button">Clear</button>
     <button class="btn primary small" id="copy-command" type="button" disabled>Copy command</button>
+    <button class="help-btn" id="fix-help-button" type="button" aria-expanded="false" aria-controls="fix-help" title="What is this?">?</button>
     <span class="toast" id="toast" hidden>Copied. Paste it into Bob's chat.</span>
   </div>
 </div>
@@ -835,6 +862,18 @@ function selectCommand() {
   toast.textContent = "Selected. Press Ctrl+C to copy.";
   toast.hidden = false;
 }
+
+/* Help panel for the fix bar: opens with the ? button, closes with Escape or a click elsewhere. */
+const helpButton = document.getElementById("fix-help-button");
+const helpPanel = document.getElementById("fix-help");
+function setHelp(open) {
+  helpPanel.hidden = !open;
+  helpButton.setAttribute("aria-expanded", String(open));
+}
+helpButton.addEventListener("click", e => { e.stopPropagation(); setHelp(helpPanel.hidden); });
+helpPanel.addEventListener("click", e => e.stopPropagation());
+document.addEventListener("click", () => setHelp(false));
+document.addEventListener("keydown", e => { if (e.key === "Escape") setHelp(false); });
 
 /* Theme toggle: remembers the choice in this browser only. */
 const THEME_KEY = "docdrift-theme";
