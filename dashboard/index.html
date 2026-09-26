@@ -123,6 +123,26 @@
     font-family: var(--font-display); font-size: 28px; color: var(--accent); pointer-events: none;
   }
 
+  /* Audit panel (only shown when the local DocDrift server is running) */
+  .audit { padding: 14px 16px; margin-bottom: 20px; display: grid; gap: 10px; }
+  .audit form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .audit input[type="text"], .audit select {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; font-size: 14px;
+  }
+  .audit #repo-input { flex: 3 1 320px; min-width: 0; font-family: var(--font-mono); font-size: 13px; }
+  .audit #docs-input { flex: 1 1 160px; min-width: 0; }
+  .audit .status { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+  .audit .status b { font-weight: 600; }
+  .audit pre {
+    margin: 0; background: var(--surface-2); border-radius: 8px; padding: 10px 12px; max-height: 180px;
+    overflow: auto; font-family: var(--font-mono); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .spinner {
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   /* Layout: report list on the left, detail on the right; stacks on narrow screens */
   .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; align-items: start; }
   @media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
@@ -266,6 +286,22 @@
   </header>
 
   <div id="error" class="banner" role="alert" hidden></div>
+
+  <section class="panel audit" id="audit-panel" hidden aria-label="Run a new audit">
+    <div class="label">New audit with IBM Bob</div>
+    <form id="audit-form">
+      <input id="repo-input" type="text" placeholder="https://github.com/owner/repository" aria-label="Repository link" autocomplete="off" spellcheck="false">
+      <input id="docs-input" type="text" placeholder="Doc files (optional)" aria-label="Doc files to audit, optional" autocomplete="off">
+      <select id="cost-input" aria-label="Bobcoin limit">
+        <option value="1">Max 1 Bobcoin</option>
+        <option value="2" selected>Max 2 Bobcoins</option>
+        <option value="3">Max 3 Bobcoins</option>
+      </select>
+      <button class="btn primary" id="audit-button" type="submit">Audit</button>
+    </form>
+    <div class="status" id="audit-status" hidden></div>
+    <pre id="audit-log" hidden></pre>
+  </section>
 
   <main class="layout">
     <aside class="panel reports" aria-label="Loaded reports">
@@ -813,7 +849,7 @@ render();
    reports listed in reports/index.json automatically. Real reports replace the samples.
    Opened as a local file, browsers block this, so the page keeps the samples and the
    Load reports button. */
-async function autoLoad() {
+async function autoLoad(selectFile) {
   if (!/^https?:$/.test(location.protocol)) return;
   try {
     const res = await fetch("../reports/index.json", { cache: "no-store" });
@@ -823,18 +859,97 @@ async function autoLoad() {
     for (const name of names) {
       try {
         const r = await fetch("../reports/" + encodeURIComponent(name), { cache: "no-store" });
-        if (r.ok) loaded.push(normalise(await r.json(), name));
+        if (r.ok) { const rep = normalise(await r.json(), name); rep._file = name; loaded.push(rep); }
       } catch (_) { /* skip a broken file, keep the rest */ }
     }
     if (loaded.length) {
       state.reports = loaded;
-      state.active = 0;
+      const wanted = selectFile ? loaded.findIndex(r => r._file === selectFile) : -1;
+      state.active = wanted >= 0 ? wanted : 0;
       resetView();
       render();
     }
   } catch (_) { /* no index: keep the samples */ }
 }
 autoLoad();
+
+/* =====================================================================
+   Running audits from the page.
+   Only available when the page is opened through the local DocDrift server
+   (python server/docdrift_server.py). The server runs IBM Bob (Bob Shell) in the
+   Docs Auditor mode. On the public website this panel stays hidden.
+   ===================================================================== */
+const STATUS_TEXT = {
+  queued: "Starting",
+  cloning: "Cloning the repository",
+  auditing: "Bob is checking every claim in the docs against the code",
+  saving: "Saving the report",
+  done: "Done",
+  failed: "Failed"
+};
+
+async function detectServer() {
+  if (!/^https?:$/.test(location.protocol)) return;
+  try {
+    const res = await fetch("/api/health", { cache: "no-store" });
+    if (res.ok) document.getElementById("audit-panel").hidden = false;
+  } catch (_) { /* no server: the panel stays hidden */ }
+}
+
+function showStatus(job) {
+  const status = document.getElementById("audit-status");
+  const logBox = document.getElementById("audit-log");
+  const busy = !["done", "failed"].includes(job.status);
+  status.hidden = false;
+  status.innerHTML = `${busy ? '<span class="spinner" aria-hidden="true"></span>' : ""}
+    <b>${esc(STATUS_TEXT[job.status] || job.status)}</b>
+    <span class="why">${esc(job.repo || "")}</span>`;
+  if (job.log && job.log.length) {
+    logBox.hidden = false;
+    logBox.textContent = job.log.join("\n");
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+  document.getElementById("audit-button").disabled = busy;
+}
+
+async function pollJob(id) {
+  try {
+    const res = await fetch("/api/jobs/" + encodeURIComponent(id), { cache: "no-store" });
+    const job = await res.json();
+    showStatus(job);
+    if (job.status === "done") { await autoLoad(job.report); return; }
+    if (job.status === "failed") { showError(job.error || "The audit failed. See the log."); return; }
+  } catch (_) { /* server briefly unreachable: keep trying */ }
+  setTimeout(() => pollJob(id), 2000);
+}
+
+document.getElementById("audit-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  showError("");
+  const repo = document.getElementById("repo-input").value.trim();
+  if (!repo) { showError("Paste a repository link first."); return; }
+  document.getElementById("audit-button").disabled = true;
+  try {
+    const res = await fetch("/api/audit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        repo,
+        docs: document.getElementById("docs-input").value.trim(),
+        max_cost: Number(document.getElementById("cost-input").value)
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(data.error || "The server refused the request."); document.getElementById("audit-button").disabled = false; return; }
+    showStatus({ status: "queued", repo, log: [] });
+    pollJob(data.job);
+  } catch (_) {
+    showError("Could not reach the DocDrift server. Is it still running?");
+    document.getElementById("audit-button").disabled = false;
+  }
+});
+
+detectServer();
 </script>
 </body>
 </html>

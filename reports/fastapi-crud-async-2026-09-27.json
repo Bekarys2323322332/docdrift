@@ -1,0 +1,117 @@
+{
+  "tool": "DocDrift",
+  "schema_version": 1,
+  "repo": {
+    "name": "fastapi-crud-async",
+    "source": "https://github.com/testdrivenio/fastapi-crud-async",
+    "licence": "MIT",
+    "target_folder": "audits/fastapi-crud-async"
+  },
+  "audited_at": "2026-09-27",
+  "doc_files": [
+    "README.md"
+  ],
+  "summary": {
+    "claims_checked": 4,
+    "ok": 4,
+    "drift": 0,
+    "unverified": 0,
+    "trust_score": 100,
+    "findings_by_severity": {
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0
+    }
+  },
+  "findings": [],
+  "undocumented_settings": [
+    {
+      "name": "DATABASE_URL",
+      "file": "src/app/db.py",
+      "line": 16,
+      "default": null
+    },
+    {
+      "name": "POSTGRES_USER",
+      "file": "docker-compose.yml",
+      "line": 21,
+      "default": null
+    },
+    {
+      "name": "POSTGRES_PASSWORD",
+      "file": "docker-compose.yml",
+      "line": 22,
+      "default": null
+    },
+    {
+      "name": "POSTGRES_DB",
+      "file": "docker-compose.yml",
+      "line": 23,
+      "default": null
+    }
+  ],
+  "outdated_practices": [
+    {
+      "doc": {
+        "file": "README.md",
+        "line": 12
+      },
+      "observation": "Uses `docker-compose` (Compose v1 CLI with hyphen). Newer Docker Desktop ships Compose v2 as `docker compose` (no hyphen); the v1 standalone binary is no longer maintained. General knowledge, not evidence from the code."
+    }
+  ],
+  "unverified": [],
+  "ok": [
+    {
+      "id": "C1",
+      "category": "COMMAND",
+      "claim": "docker-compose up -d --build",
+      "doc": {
+        "file": "README.md",
+        "line": 12
+      },
+      "evidence": {
+        "file": "docker-compose.yml",
+        "line": 1
+      }
+    },
+    {
+      "id": "C2",
+      "category": "API",
+      "claim": "http://localhost:8002/ping",
+      "doc": {
+        "file": "README.md",
+        "line": 17
+      },
+      "evidence": {
+        "file": "src/app/api/ping.py",
+        "line": 6
+      }
+    },
+    {
+      "id": "C3",
+      "category": "API",
+      "claim": "http://localhost:8002/docs",
+      "doc": {
+        "file": "README.md",
+        "line": 18
+      },
+      "evidence": {
+        "file": "src/app/main.py",
+        "line": 8
+      }
+    },
+    {
+      "id": "C4",
+      "category": "API",
+      "claim": "http://localhost:8002/notes",
+      "doc": {
+        "file": "README.md",
+        "line": 19
+      },
+      "evidence": {
+        "file": "src/app/main.py",
+        "line": 22
+      }
+    }
+  ]
+}

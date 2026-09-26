@@ -1,0 +1,83 @@
+{
+  "tool": "DocDrift",
+  "schema_version": 1,
+  "repo": {
+    "name": "time_forecasting",
+    "source": "C:\\Users\\bekar\\time_forecasting",
+    "licence": "NOT FOUND",
+    "target_folder": "audits/time_forecasting"
+  },
+  "audited_at": "2025-07-14",
+  "doc_files": ["README.md"],
+  "summary": {
+    "claims_checked": 45,
+    "ok": 45,
+    "drift": 0,
+    "unverified": 0,
+    "trust_score": 100,
+    "findings_by_severity": { "HIGH": 0, "MEDIUM": 0, "LOW": 0 }
+  },
+  "findings": [],
+  "undocumented_settings": [
+    {
+      "name": "API_BASE_URL",
+      "file": "dashboard/app.py",
+      "line": 34,
+      "default": "http://localhost:8000"
+    }
+  ],
+  "outdated_practices": [
+    {
+      "doc": { "file": "README.md", "line": 45 },
+      "observation": "requirements.txt is encoded as UTF-16 LE (BOM visible in raw read). pip's behaviour with non-UTF-8 requirements files varies by version; on some platforms `pip install -r requirements.txt` may fail or misparse package names. General knowledge about pip encoding handling, not evidence from the code itself."
+    }
+  ],
+  "unverified": [],
+  "ok": [
+    { "id": "C1",  "category": "COMMAND",    "claim": "docker compose up --build",                         "doc": { "file": "README.md", "line": 29 }, "evidence": { "file": "docker-compose.yml", "line": 1 } },
+    { "id": "C2",  "category": "PATH",       "claim": "Dashboard at http://localhost:8501",                 "doc": { "file": "README.md", "line": 33 }, "evidence": { "file": "docker-compose.yml", "line": 75 } },
+    { "id": "C3",  "category": "PATH",       "claim": "API docs at http://localhost:8000/docs",             "doc": { "file": "README.md", "line": 34 }, "evidence": { "file": "docker-compose.yml", "line": 49 } },
+    { "id": "C4",  "category": "COMMAND",    "claim": "uvicorn src.api.main:app --reload",                 "doc": { "file": "README.md", "line": 54 }, "evidence": { "file": "src/api/main.py", "line": 11 } },
+    { "id": "C5",  "category": "COMMAND",    "claim": "streamlit run dashboard/app.py",                    "doc": { "file": "README.md", "line": 55 }, "evidence": { "file": "dashboard/app.py", "line": 1 } },
+    { "id": "C6",  "category": "ENV",        "claim": "The default .env uses SQLite",                      "doc": { "file": "README.md", "line": 51 }, "evidence": { "file": ".env.example", "line": 10 } },
+    { "id": "C7",  "category": "PATH",       "claim": "src/config.py exists",                              "doc": { "file": "README.md", "line": 99 }, "evidence": { "file": "src/config.py", "line": 1 } },
+    { "id": "C8",  "category": "PATH",       "claim": "src/database.py exists",                            "doc": { "file": "README.md", "line": 100 }, "evidence": { "file": "src/database.py", "line": 1 } },
+    { "id": "C9",  "category": "PATH",       "claim": "src/models.py exists",                              "doc": { "file": "README.md", "line": 101 }, "evidence": { "file": "src/models.py", "line": 1 } },
+    { "id": "C10", "category": "PATH",       "claim": "src/api/main.py exists",                            "doc": { "file": "README.md", "line": 103 }, "evidence": { "file": "src/api/main.py", "line": 1 } },
+    { "id": "C11", "category": "PATH",       "claim": "src/api/routes.py exists",                          "doc": { "file": "README.md", "line": 104 }, "evidence": { "file": "src/api/routes.py", "line": 1 } },
+    { "id": "C12", "category": "PATH",       "claim": "src/api/schemas.py exists",                         "doc": { "file": "README.md", "line": 105 }, "evidence": { "file": "src/api/schemas.py", "line": 1 } },
+    { "id": "C13", "category": "PATH",       "claim": "src/training/data_loader.py exists",                "doc": { "file": "README.md", "line": 107 }, "evidence": { "file": "src/training/data_loader.py", "line": 1 } },
+    { "id": "C14", "category": "PATH",       "claim": "src/training/lstm_trainer.py exists",               "doc": { "file": "README.md", "line": 108 }, "evidence": { "file": "src/training/lstm_trainer.py", "line": 1 } },
+    { "id": "C15", "category": "PATH",       "claim": "src/training/prophet_trainer.py exists",            "doc": { "file": "README.md", "line": 109 }, "evidence": { "file": "src/training/prophet_trainer.py", "line": 1 } },
+    { "id": "C16", "category": "PATH",       "claim": "src/training/arima_trainer.py exists",              "doc": { "file": "README.md", "line": 110 }, "evidence": { "file": "src/training/arima_trainer.py", "line": 1 } },
+    { "id": "C17", "category": "PATH",       "claim": "src/training/evaluation.py exists",                 "doc": { "file": "README.md", "line": 111 }, "evidence": { "file": "src/training/evaluation.py", "line": 1 } },
+    { "id": "C18", "category": "PATH",       "claim": "src/training/pipeline.py exists",                   "doc": { "file": "README.md", "line": 112 }, "evidence": { "file": "src/training/pipeline.py", "line": 1 } },
+    { "id": "C19", "category": "PATH",       "claim": "src/inference/predictor.py exists",                 "doc": { "file": "README.md", "line": 114 }, "evidence": { "file": "src/inference/predictor.py", "line": 1 } },
+    { "id": "C20", "category": "PATH",       "claim": "dashboard/app.py exists",                           "doc": { "file": "README.md", "line": 115 }, "evidence": { "file": "dashboard/app.py", "line": 1 } },
+    { "id": "C21", "category": "PATH",       "claim": "exploration.ipynb exists",                          "doc": { "file": "README.md", "line": 117 }, "evidence": { "file": "exploration.ipynb", "line": 1 } },
+    { "id": "C22", "category": "COUNT",      "claim": "68 tests",                                          "doc": { "file": "README.md", "line": 116 }, "evidence": { "file": "tests/test_predictor.py", "line": 67 } },
+    { "id": "C23", "category": "COMMAND",    "claim": "pytest",                                            "doc": { "file": "README.md", "line": 125 }, "evidence": { "file": "requirements.txt", "line": 37 } },
+    { "id": "C24", "category": "COMMAND",    "claim": "pytest -m \"not slow\"",                            "doc": { "file": "README.md", "line": 126 }, "evidence": { "file": "pytest.ini", "line": 18 } },
+    { "id": "C25", "category": "API",        "claim": "GET /health",                                       "doc": { "file": "README.md", "line": 79 }, "evidence": { "file": "src/api/routes.py", "line": 59 } },
+    { "id": "C26", "category": "API",        "claim": "GET /tickers",                                      "doc": { "file": "README.md", "line": 80 }, "evidence": { "file": "src/api/routes.py", "line": 69 } },
+    { "id": "C27", "category": "API",        "claim": "GET /historical?ticker=AAPL&days=365",              "doc": { "file": "README.md", "line": 82 }, "evidence": { "file": "src/api/routes.py", "line": 227 } },
+    { "id": "C28", "category": "API",        "claim": "POST /retrain",                                     "doc": { "file": "README.md", "line": 83 }, "evidence": { "file": "src/api/routes.py", "line": 138 } },
+    { "id": "C29", "category": "API",        "claim": "GET /retrain-status/{job_id}",                      "doc": { "file": "README.md", "line": 84 }, "evidence": { "file": "src/api/routes.py", "line": 177 } },
+    { "id": "C30", "category": "API",        "claim": "POST /forecast",                                    "doc": { "file": "README.md", "line": 85 }, "evidence": { "file": "src/api/routes.py", "line": 198 } },
+    { "id": "C31", "category": "API",        "claim": "GET /model-comparison?ticker=AAPL",                 "doc": { "file": "README.md", "line": 86 }, "evidence": { "file": "src/api/routes.py", "line": 280 } },
+    { "id": "C32", "category": "API",        "claim": "POST /retrain returns a job_id",                    "doc": { "file": "README.md", "line": 89 }, "evidence": { "file": "src/api/routes.py", "line": 169 } },
+    { "id": "C33", "category": "VERSION",    "claim": "Python 3.12",                                       "doc": { "file": "README.md", "line": 201 }, "evidence": { "file": "Dockerfile.api", "line": 3 } },
+    { "id": "C34", "category": "DEPENDENCY", "claim": "FastAPI",                                           "doc": { "file": "README.md", "line": 201 }, "evidence": { "file": "requirements.txt", "line": 22 } },
+    { "id": "C35", "category": "DEPENDENCY", "claim": "PyTorch",                                           "doc": { "file": "README.md", "line": 201 }, "evidence": { "file": "requirements.txt", "line": 15 } },
+    { "id": "C36", "category": "DEPENDENCY", "claim": "Prophet",                                           "doc": { "file": "README.md", "line": 201 }, "evidence": { "file": "requirements.txt", "line": 16 } },
+    { "id": "C37", "category": "DEPENDENCY", "claim": "statsmodels",                                       "doc": { "file": "README.md", "line": 201 }, "evidence": { "file": "requirements.txt", "line": 17 } },
+    { "id": "C38", "category": "DEPENDENCY", "claim": "SQLAlchemy",                                        "doc": { "file": "README.md", "line": 201 }, "evidence": { "file": "requirements.txt", "line": 28 } },
+    { "id": "C39", "category": "DEPENDENCY", "claim": "PostgreSQL",                                        "doc": { "file": "README.md", "line": 201 }, "evidence": { "file": "docker-compose.yml", "line": 13 } },
+    { "id": "C40", "category": "DEPENDENCY", "claim": "Streamlit",                                         "doc": { "file": "README.md", "line": 201 }, "evidence": { "file": "requirements.txt", "line": 32 } },
+    { "id": "C41", "category": "DEPENDENCY", "claim": "Plotly",                                            "doc": { "file": "README.md", "line": 201 }, "evidence": { "file": "requirements.txt", "line": 33 } },
+    { "id": "C42", "category": "API",        "claim": "ARIMA uses a fixed (1,1,1) order",                  "doc": { "file": "README.md", "line": 192 }, "evidence": { "file": "src/config.py", "line": 64 } },
+    { "id": "C43", "category": "PATH",       "claim": "Model path pattern models/AAPL/2026-08-24_14-30-12/", "doc": { "file": "README.md", "line": 169 }, "evidence": { "file": "src/config.py", "line": 106 } },
+    { "id": "C44", "category": "ENV",        "claim": "DATABASE_URL env var",                               "doc": { "file": "README.md", "line": 51 }, "evidence": { "file": "src/config.py", "line": 17 } },
+    { "id": "C45", "category": "ENV",        "claim": "API_PORT default 8000",                              "doc": { "file": "README.md", "line": 87 }, "evidence": { "file": "src/config.py", "line": 20 } }
+  ]
+}

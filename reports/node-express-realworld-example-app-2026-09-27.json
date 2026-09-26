@@ -1,0 +1,253 @@
+{
+  "tool": "DocDrift",
+  "schema_version": 1,
+  "repo": {
+    "name": "node-express-realworld-example-app",
+    "source": "https://github.com/gothinkster/node-express-realworld-example-app",
+    "licence": "MIT",
+    "target_folder": "audits/node-express-realworld-example-app"
+  },
+  "audited_at": "2026-09-27",
+  "doc_files": [
+    "README.md"
+  ],
+  "summary": {
+    "claims_checked": 14,
+    "ok": 13,
+    "drift": 1,
+    "unverified": 0,
+    "trust_score": 93,
+    "findings_by_severity": {
+      "HIGH": 0,
+      "MEDIUM": 1,
+      "LOW": 0
+    }
+  },
+  "findings": [
+    {
+      "id": "D1",
+      "severity": "MEDIUM",
+      "category": "PATH",
+      "summary": "Travis CI badge references a non-existent CI configuration and a different repository owner",
+      "claim_ids": [
+        "C14"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 3,
+        "quote": "[![Build Status](https://travis-ci.org/anishkny/node-express-realworld-example-app.svg?branch=master)](https://travis-ci.org/anishkny/node-express-realworld-example-app)"
+      },
+      "evidence": [
+        {
+          "file": "README.md",
+          "line": 3,
+          "note": "Badge URL points to 'anishkny' account, not 'gothinkster'. No .travis.yml exists anywhere in the repo. No .github/workflows/ directory exists."
+        }
+      ],
+      "why_it_matters": "The badge is permanently broken and misleading; a contributor clicking it or trying to set up CI will find no configuration to follow.",
+      "suggested_fix": "Remove the Travis CI badge line entirely, or replace it with a badge that reflects the actual CI setup (none currently)."
+    }
+  ],
+  "undocumented_settings": [
+    {
+      "name": "PORT",
+      "file": "src/main.ts",
+      "line": 53,
+      "default": "3000"
+    },
+    {
+      "name": "HOST",
+      "file": "Dockerfile",
+      "line": 9,
+      "default": "0.0.0.0"
+    }
+  ],
+  "outdated_practices": [
+    {
+      "doc": {
+        "file": "README.md",
+        "line": 3
+      },
+      "observation": "Travis CI (travis-ci.org) was shut down for open-source projects in 2021. General knowledge, not evidence from the code."
+    },
+    {
+      "doc": {
+        "file": "src/app/routes/auth/token.utils.ts",
+        "line": 4
+      },
+      "observation": "JWT_SECRET falls back to the hardcoded string 'superSecret' when the env var is absent, meaning the app starts without requiring the documented secret. General knowledge about security impact; not a docs drift finding."
+    }
+  ],
+  "unverified": [],
+  "ok": [
+    {
+      "id": "C1",
+      "category": "COMMAND",
+      "claim": "npm install",
+      "doc": {
+        "file": "README.md",
+        "line": 16
+      },
+      "evidence": {
+        "file": "package.json",
+        "line": 1
+      }
+    },
+    {
+      "id": "C2",
+      "category": "COMMAND",
+      "claim": "npx prisma generate",
+      "doc": {
+        "file": "README.md",
+        "line": 37
+      },
+      "evidence": {
+        "file": "src/prisma/schema.prisma",
+        "line": 1
+      }
+    },
+    {
+      "id": "C3",
+      "category": "COMMAND",
+      "claim": "npx prisma migrate deploy",
+      "doc": {
+        "file": "README.md",
+        "line": 45
+      },
+      "evidence": {
+        "file": "src/prisma/migrations",
+        "line": 1
+      }
+    },
+    {
+      "id": "C4",
+      "category": "COMMAND",
+      "claim": "npx nx serve api",
+      "doc": {
+        "file": "README.md",
+        "line": 54
+      },
+      "evidence": {
+        "file": "project.json",
+        "line": 40
+      }
+    },
+    {
+      "id": "C5",
+      "category": "COMMAND",
+      "claim": "npx prisma db seed",
+      "doc": {
+        "file": "README.md",
+        "line": 62
+      },
+      "evidence": {
+        "file": "package.json",
+        "line": 12
+      }
+    },
+    {
+      "id": "C6",
+      "category": "COMMAND",
+      "claim": "node dist/api/main.js",
+      "doc": {
+        "file": "README.md",
+        "line": 73
+      },
+      "evidence": {
+        "file": "project.json",
+        "line": 13
+      }
+    },
+    {
+      "id": "C7",
+      "category": "ENV",
+      "claim": "DATABASE_URL",
+      "doc": {
+        "file": "README.md",
+        "line": 28
+      },
+      "evidence": {
+        "file": "src/prisma/schema.prisma",
+        "line": 3
+      }
+    },
+    {
+      "id": "C8",
+      "category": "ENV",
+      "claim": "JWT_SECRET",
+      "doc": {
+        "file": "README.md",
+        "line": 29
+      },
+      "evidence": {
+        "file": "src/app/routes/auth/token.utils.ts",
+        "line": 4
+      }
+    },
+    {
+      "id": "C9",
+      "category": "ENV",
+      "claim": "NODE_ENV",
+      "doc": {
+        "file": "README.md",
+        "line": 30
+      },
+      "evidence": {
+        "file": "src/prisma/prisma-client.ts",
+        "line": 19
+      }
+    },
+    {
+      "id": "C10",
+      "category": "PATH",
+      "claim": ".env file at root",
+      "doc": {
+        "file": "README.md",
+        "line": 22
+      },
+      "evidence": {
+        "file": ".gitignore",
+        "line": 36
+      }
+    },
+    {
+      "id": "C11",
+      "category": "PATH",
+      "claim": "dist/api/main.js deploy entry point",
+      "doc": {
+        "file": "README.md",
+        "line": 73
+      },
+      "evidence": {
+        "file": "project.json",
+        "line": 13
+      }
+    },
+    {
+      "id": "C12",
+      "category": "DEPENDENCY",
+      "claim": "Express + Prisma stack",
+      "doc": {
+        "file": "README.md",
+        "line": 5
+      },
+      "evidence": {
+        "file": "package.json",
+        "line": 22
+      }
+    },
+    {
+      "id": "C13",
+      "category": "DEPENDENCY",
+      "claim": "Nx tooling (npx nx serve api)",
+      "doc": {
+        "file": "README.md",
+        "line": 54
+      },
+      "evidence": {
+        "file": "package.json",
+        "line": 51
+      }
+    }
+  ]
+}

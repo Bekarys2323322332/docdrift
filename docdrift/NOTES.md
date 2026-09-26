@@ -204,3 +204,21 @@ Pipeline runs:
   inside the code (module docstrings, API docs pages generated from docstrings, CLI help text).
 - Lesson for the pitch: re-auditing after a fix is part of the workflow. DocDrift caught the
   mistake in its own earlier result.
+
+## Runs 9 and 10: one-click audits from the dashboard (local server + Bob Shell)
+
+After the Windows path fix, both audits ran end to end from the dashboard: paste link, click
+Audit, Bob Shell runs the Docs Auditor, the report appears automatically.
+
+| Repo | Licence | Claims | Trust | Findings | Coins | Time |
+|---|---|---|---|---|---|---|
+| testdrivenio/fastapi-crud-async | MIT | 4 | 100% | 0 drift; docker-compose noted as advice only | 0.678 | 1 min 24 s |
+| gothinkster/node-express-realworld-example-app | MIT | 14 | 93% | 1: README build badge points to another user's Travis CI and the repo has no CI config at all | 0.964 | 2 min 13 s |
+
+- Checked by hand: the node README line 3 badge links to travis-ci.org/anishkny/..., and the
+  repo has no .travis.yml or .github folder. Real finding. Bob rated it MEDIUM; LOW would also
+  be fair, since it misleads about testing but does not break setup.
+- The new "Outdated practices" rule worked: docker-compose was reported as advice only, not
+  as drift.
+- The server stamped the real date itself (2026-09-27), so the date problem is gone.
+- DocDrift works on Python and TypeScript/Node projects.
