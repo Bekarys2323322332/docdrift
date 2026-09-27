@@ -1,0 +1,727 @@
+{
+  "tool": "DocDrift",
+  "schema_version": 1,
+  "repo": {
+    "name": "docdrift-demo",
+    "source": "C:\\Users\\bekar\\docdrift-demo",
+    "licence": "NOT FOUND",
+    "target_folder": "audits/docdrift-demo"
+  },
+  "audited_at": "2026-09-27",
+  "doc_files": [
+    "README.md"
+  ],
+  "summary": {
+    "claims_checked": 34,
+    "ok": 22,
+    "drift": 11,
+    "unverified": 1,
+    "trust_score": 67,
+    "findings_by_severity": {
+      "HIGH": 4,
+      "MEDIUM": 5,
+      "LOW": 2
+    }
+  },
+  "findings": [
+    {
+      "id": "D1",
+      "severity": "HIGH",
+      "category": "COMMAND",
+      "summary": "Wrong uvicorn module path \u2014 src.api.server does not exist",
+      "claim_ids": [
+        "C4"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 55,
+        "quote": "uvicorn src.api.server:app --reload"
+      },
+      "evidence": [
+        {
+          "file": "src/api/main.py",
+          "line": 11,
+          "note": "FastAPI app object is defined here as `app = FastAPI(...)`; src/api/server.py does not exist"
+        },
+        {
+          "file": "Dockerfile.api",
+          "line": 46,
+          "note": "CMD confirms correct path: uvicorn src.api.main:app"
+        }
+      ],
+      "why_it_matters": "A developer following the local-run instructions will get a ModuleNotFoundError and the API will not start.",
+      "suggested_fix": "uvicorn src.api.main:app --reload"
+    },
+    {
+      "id": "D2",
+      "severity": "HIGH",
+      "category": "COMMAND",
+      "summary": "Wrong dashboard entry point \u2014 dashboard/main.py does not exist",
+      "claim_ids": [
+        "C5"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 56,
+        "quote": "streamlit run dashboard/main.py"
+      },
+      "evidence": [
+        {
+          "file": "dashboard/app.py",
+          "line": 1,
+          "note": "The Streamlit app lives in dashboard/app.py; dashboard/main.py does not exist"
+        }
+      ],
+      "why_it_matters": "A developer following the local-run instructions will get a FileNotFoundError and the dashboard will not start.",
+      "suggested_fix": "streamlit run dashboard/app.py"
+    },
+    {
+      "id": "D3",
+      "severity": "HIGH",
+      "category": "ENV",
+      "summary": "Wrong environment variable name for the database connection",
+      "claim_ids": [
+        "C33"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 52,
+        "quote": "set `DB_CONNECTION_STRING` in `.env`"
+      },
+      "evidence": [
+        {
+          "file": ".env.example",
+          "line": 10,
+          "note": "Actual variable name is DATABASE_URL"
+        },
+        {
+          "file": "src/config.py",
+          "line": 17,
+          "note": "database_url field maps to DATABASE_URL env var via pydantic-settings"
+        }
+      ],
+      "why_it_matters": "A developer who sets DB_CONNECTION_STRING will be silently ignored; the app will use the default PostgreSQL connection string and fail if no local Postgres server is running.",
+      "suggested_fix": "set `DATABASE_URL` in `.env`"
+    },
+    {
+      "id": "D4",
+      "severity": "HIGH",
+      "category": "VERSION",
+      "summary": "Python version is 3.12, not 3.9",
+      "claim_ids": [
+        "C31"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 204,
+        "quote": "Python 3.9, FastAPI, PyTorch, Prophet, statsmodels, SQLAlchemy, PostgreSQL, Streamlit, Plotly, Redis, Docker, pytest."
+      },
+      "evidence": [
+        {
+          "file": "Dockerfile.api",
+          "line": 3,
+          "note": "FROM python:3.12-slim"
+        }
+      ],
+      "why_it_matters": "A developer who installs Python 3.9 may see compatibility failures with pinned dependencies such as torch==2.13.0 and pandas==3.0.2, which require Python 3.10\u20133.12.",
+      "suggested_fix": "Python 3.12, FastAPI, PyTorch, Prophet, statsmodels, SQLAlchemy, PostgreSQL, Streamlit, Plotly, Docker, pytest."
+    },
+    {
+      "id": "D5",
+      "severity": "MEDIUM",
+      "category": "API",
+      "summary": "/health uses GET, not POST",
+      "claim_ids": [
+        "C23"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 80,
+        "quote": "POST | `/health` | API status, database connectivity, trained tickers"
+      },
+      "evidence": [
+        {
+          "file": "src/api/routes.py",
+          "line": 59,
+          "note": "@router.get(\"/health\", response_model=HealthResponse)"
+        }
+      ],
+      "why_it_matters": "A developer using the table as a reference will send a POST and receive a 405 Method Not Allowed.",
+      "suggested_fix": "Change POST to GET in the endpoint table row for /health."
+    },
+    {
+      "id": "D6",
+      "severity": "MEDIUM",
+      "category": "API",
+      "summary": "Endpoint is /tickers, not /models",
+      "claim_ids": [
+        "C24"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 81,
+        "quote": "GET | `/models` | Which tickers have a trained model ready"
+      },
+      "evidence": [
+        {
+          "file": "src/api/routes.py",
+          "line": 69,
+          "note": "@router.get(\"/tickers\", response_model=TickerListResponse)"
+        }
+      ],
+      "why_it_matters": "A developer calling GET /models will receive a 404; the correct endpoint is GET /tickers.",
+      "suggested_fix": "Change /models to /tickers in the endpoint table."
+    },
+    {
+      "id": "D7",
+      "severity": "MEDIUM",
+      "category": "API",
+      "summary": "Prediction endpoint is /forecast, not /predict",
+      "claim_ids": [
+        "C28"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 85,
+        "quote": "POST | `/predict` | Get predictions (`lstm`, `prophet`, `arima`, or `ensemble`)"
+      },
+      "evidence": [
+        {
+          "file": "src/api/routes.py",
+          "line": 198,
+          "note": "@router.post(\"/forecast\", response_model=ForecastResponse)"
+        }
+      ],
+      "why_it_matters": "A developer calling POST /predict will receive a 404; the correct endpoint is POST /forecast.",
+      "suggested_fix": "Change /predict to /forecast in the endpoint table."
+    },
+    {
+      "id": "D8",
+      "severity": "MEDIUM",
+      "category": "PATH",
+      "summary": "src/api/endpoints.py does not exist \u2014 the file is routes.py",
+      "claim_ids": [
+        "C12"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 105,
+        "quote": "src/api/endpoints.py         Endpoints"
+      },
+      "evidence": [
+        {
+          "file": "src/api/routes.py",
+          "line": 1,
+          "note": "The endpoints file is src/api/routes.py; src/api/endpoints.py does not exist"
+        }
+      ],
+      "why_it_matters": "A developer looking for the endpoints file using the project structure map will not find it.",
+      "suggested_fix": "src/api/routes.py           Endpoints"
+    },
+    {
+      "id": "D9",
+      "severity": "MEDIUM",
+      "category": "PATH",
+      "summary": "src/training/lstm_model.py does not exist \u2014 the file is lstm_trainer.py",
+      "claim_ids": [
+        "C15"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 109,
+        "quote": "src/training/lstm_model.py        PyTorch LSTM"
+      },
+      "evidence": [
+        {
+          "file": "src/training/lstm_trainer.py",
+          "line": 1,
+          "note": "The LSTM module is src/training/lstm_trainer.py; src/training/lstm_model.py does not exist"
+        }
+      ],
+      "why_it_matters": "A developer navigating to this file from the structure map will not find it.",
+      "suggested_fix": "src/training/lstm_trainer.py     PyTorch LSTM"
+    },
+    {
+      "id": "D10",
+      "severity": "LOW",
+      "category": "DEPENDENCY",
+      "summary": "Redis is listed in the Stack section but is not used",
+      "claim_ids": [
+        "C32"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 204,
+        "quote": "Python 3.9, FastAPI, PyTorch, Prophet, statsmodels, SQLAlchemy, PostgreSQL, Streamlit, Plotly, Redis, Docker, pytest."
+      },
+      "evidence": [
+        {
+          "file": "docker-compose.yml",
+          "line": 11,
+          "note": "Only services db, api, dashboard defined \u2014 no Redis service"
+        },
+        {
+          "file": "requirements.txt",
+          "line": 1,
+          "note": "No redis package in requirements"
+        }
+      ],
+      "why_it_matters": "A developer setting up infrastructure may provision a Redis instance unnecessarily.",
+      "suggested_fix": "Remove Redis from the Stack list."
+    },
+    {
+      "id": "D11",
+      "severity": "LOW",
+      "category": "PATH",
+      "summary": "exploration.ipynb does not exist in the repository",
+      "claim_ids": [
+        "C22"
+      ],
+      "doc": {
+        "file": "README.md",
+        "line": 118,
+        "quote": "exploration.ipynb        Data exploration and model comparison, with charts"
+      },
+      "evidence": [
+        {
+          "file": ".",
+          "line": 1,
+          "note": "Root directory listing does not include exploration.ipynb"
+        }
+      ],
+      "why_it_matters": "A developer looking for the notebook will not find it.",
+      "suggested_fix": "Remove the exploration.ipynb line from the project structure, or add the file to the repository."
+    }
+  ],
+  "undocumented_settings": [
+    {
+      "name": "API_BASE_URL",
+      "file": "dashboard/app.py",
+      "line": 34,
+      "default": "http://localhost:8000"
+    },
+    {
+      "name": "API_PORT",
+      "file": "src/config.py",
+      "line": 20,
+      "default": "8000"
+    },
+    {
+      "name": "DEFAULT_PERIOD_DAYS",
+      "file": "src/config.py",
+      "line": 28,
+      "default": "730"
+    },
+    {
+      "name": "MIN_DATA_POINTS",
+      "file": "src/config.py",
+      "line": 29,
+      "default": "100"
+    },
+    {
+      "name": "MAX_PERIOD_DAYS",
+      "file": "src/config.py",
+      "line": 42,
+      "default": "1825"
+    },
+    {
+      "name": "LOOKBACK",
+      "file": "src/config.py",
+      "line": 45,
+      "default": "30"
+    },
+    {
+      "name": "TRAIN_RATIO",
+      "file": "src/config.py",
+      "line": 46,
+      "default": "0.7"
+    },
+    {
+      "name": "VAL_RATIO",
+      "file": "src/config.py",
+      "line": 47,
+      "default": "0.15"
+    },
+    {
+      "name": "LSTM_HIDDEN_SIZE",
+      "file": "src/config.py",
+      "line": 51,
+      "default": "64"
+    },
+    {
+      "name": "LSTM_NUM_LAYERS",
+      "file": "src/config.py",
+      "line": 52,
+      "default": "2"
+    },
+    {
+      "name": "LSTM_DROPOUT",
+      "file": "src/config.py",
+      "line": 53,
+      "default": "0.2"
+    },
+    {
+      "name": "LSTM_EPOCHS",
+      "file": "src/config.py",
+      "line": 54,
+      "default": "50"
+    },
+    {
+      "name": "LSTM_BATCH_SIZE",
+      "file": "src/config.py",
+      "line": 55,
+      "default": "32"
+    },
+    {
+      "name": "LSTM_LEARNING_RATE",
+      "file": "src/config.py",
+      "line": 56,
+      "default": "0.001"
+    },
+    {
+      "name": "LSTM_PATIENCE",
+      "file": "src/config.py",
+      "line": 57,
+      "default": "10"
+    },
+    {
+      "name": "PROPHET_INTERVAL_WIDTH",
+      "file": "src/config.py",
+      "line": 60,
+      "default": "0.95"
+    },
+    {
+      "name": "PROPHET_CHANGEPOINT_PRIOR_SCALE",
+      "file": "src/config.py",
+      "line": 61,
+      "default": "0.05"
+    },
+    {
+      "name": "ARIMA_ORDER",
+      "file": "src/config.py",
+      "line": 64,
+      "default": "(1,1,1)"
+    },
+    {
+      "name": "DEFAULT_HORIZON_DAYS",
+      "file": "src/config.py",
+      "line": 67,
+      "default": "7"
+    },
+    {
+      "name": "MAX_HORIZON_DAYS",
+      "file": "src/config.py",
+      "line": 73,
+      "default": "60"
+    }
+  ],
+  "outdated_practices": [
+    {
+      "doc": {
+        "file": "README.md",
+        "line": 29
+      },
+      "observation": "Uses `docker compose` (Docker Compose V2 plugin syntax). Older Docker Desktop versions ship `docker-compose` (V1). General knowledge, not evidence from the code."
+    }
+  ],
+  "unverified": [
+    {
+      "id": "C34",
+      "category": "COUNT",
+      "claim": "68 tests",
+      "doc": {
+        "file": "README.md",
+        "line": 117
+      },
+      "searched": "Counted def test_ functions in all test files: ~62 base functions, 2 of which are parametrized with 4 values each. Exact pytest-counted total (67-70 depending on interpretation) cannot be confirmed without running pytest --collect-only."
+    }
+  ],
+  "ok": [
+    {
+      "id": "C1",
+      "category": "COMMAND",
+      "claim": "docker compose up --build",
+      "doc": {
+        "file": "README.md",
+        "line": 29
+      },
+      "evidence": {
+        "file": "docker-compose.yml",
+        "line": 11
+      }
+    },
+    {
+      "id": "C2",
+      "category": "COMMAND",
+      "claim": "python -m venv venv",
+      "doc": {
+        "file": "README.md",
+        "line": 41
+      },
+      "evidence": {
+        "file": "requirements.txt",
+        "line": 1
+      }
+    },
+    {
+      "id": "C3",
+      "category": "COMMAND",
+      "claim": "pip install -r requirements.txt",
+      "doc": {
+        "file": "README.md",
+        "line": 45
+      },
+      "evidence": {
+        "file": "requirements.txt",
+        "line": 1
+      }
+    },
+    {
+      "id": "C6",
+      "category": "COMMAND",
+      "claim": "pytest",
+      "doc": {
+        "file": "README.md",
+        "line": 126
+      },
+      "evidence": {
+        "file": "requirements.txt",
+        "line": 37
+      }
+    },
+    {
+      "id": "C7",
+      "category": "COMMAND",
+      "claim": "pytest -m \"not slow\"",
+      "doc": {
+        "file": "README.md",
+        "line": 127
+      },
+      "evidence": {
+        "file": "pytest.ini",
+        "line": 18
+      }
+    },
+    {
+      "id": "C8",
+      "category": "PATH",
+      "claim": "src/config.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 100
+      },
+      "evidence": {
+        "file": "src/config.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C9",
+      "category": "PATH",
+      "claim": "src/database.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 101
+      },
+      "evidence": {
+        "file": "src/database.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C10",
+      "category": "PATH",
+      "claim": "src/models.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 102
+      },
+      "evidence": {
+        "file": "src/models.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C11",
+      "category": "PATH",
+      "claim": "src/api/main.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 104
+      },
+      "evidence": {
+        "file": "src/api/main.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C13",
+      "category": "PATH",
+      "claim": "src/api/schemas.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 106
+      },
+      "evidence": {
+        "file": "src/api/schemas.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C14",
+      "category": "PATH",
+      "claim": "src/training/data_loader.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 108
+      },
+      "evidence": {
+        "file": "src/training/data_loader.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C16",
+      "category": "PATH",
+      "claim": "src/training/prophet_trainer.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 110
+      },
+      "evidence": {
+        "file": "src/training/prophet_trainer.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C17",
+      "category": "PATH",
+      "claim": "src/training/arima_trainer.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 111
+      },
+      "evidence": {
+        "file": "src/training/arima_trainer.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C18",
+      "category": "PATH",
+      "claim": "src/training/evaluation.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 112
+      },
+      "evidence": {
+        "file": "src/training/evaluation.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C19",
+      "category": "PATH",
+      "claim": "src/training/pipeline.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 113
+      },
+      "evidence": {
+        "file": "src/training/pipeline.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C20",
+      "category": "PATH",
+      "claim": "src/inference/predictor.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 115
+      },
+      "evidence": {
+        "file": "src/inference/predictor.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C21",
+      "category": "PATH",
+      "claim": "dashboard/app.py exists",
+      "doc": {
+        "file": "README.md",
+        "line": 116
+      },
+      "evidence": {
+        "file": "dashboard/app.py",
+        "line": 1
+      }
+    },
+    {
+      "id": "C25",
+      "category": "API",
+      "claim": "GET /historical?ticker=AAPL&days=365",
+      "doc": {
+        "file": "README.md",
+        "line": 82
+      },
+      "evidence": {
+        "file": "src/api/routes.py",
+        "line": 227
+      }
+    },
+    {
+      "id": "C26",
+      "category": "API",
+      "claim": "POST /retrain",
+      "doc": {
+        "file": "README.md",
+        "line": 83
+      },
+      "evidence": {
+        "file": "src/api/routes.py",
+        "line": 138
+      }
+    },
+    {
+      "id": "C27",
+      "category": "API",
+      "claim": "GET /retrain-status/{job_id}",
+      "doc": {
+        "file": "README.md",
+        "line": 84
+      },
+      "evidence": {
+        "file": "src/api/routes.py",
+        "line": 177
+      }
+    },
+    {
+      "id": "C29",
+      "category": "API",
+      "claim": "GET /model-comparison?ticker=AAPL",
+      "doc": {
+        "file": "README.md",
+        "line": 86
+      },
+      "evidence": {
+        "file": "src/api/routes.py",
+        "line": 280
+      }
+    },
+    {
+      "id": "C30",
+      "category": "API",
+      "claim": "GET /tickers",
+      "doc": {
+        "file": "README.md",
+        "line": 71
+      },
+      "evidence": {
+        "file": "src/api/routes.py",
+        "line": 69
+      }
+    }
+  ]
+}
